@@ -86,7 +86,10 @@ export function CardLibrary({ cards, onDragStart }: CardLibraryProps) {
                 <div
                   key={card.id}
                   draggable
-                  onDragStart={() => onDragStart(card)}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('card', JSON.stringify(card));
+                    onDragStart(card);
+                  }}
                   className={`p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-md ${config.color}`}
                 >
                   <div className="flex items-start gap-2">
