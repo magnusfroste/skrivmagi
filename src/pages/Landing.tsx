@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedSection } from "@/components/landing/AnimatedSection";
+import { AnimatedDemo } from "@/components/landing/AnimatedDemo";
 import { 
   Sparkles, 
   BookOpen, 
@@ -160,6 +161,14 @@ const Landing = () => {
               </Card>
             </AnimatedSection>
           </div>
+
+          {/* Animated Demo */}
+          <AnimatedSection delay={400} className="mt-16 max-w-3xl mx-auto">
+            <h3 className="text-xl font-semibold text-center mb-6 text-muted-foreground">
+              Se hur det fungerar
+            </h3>
+            <AnimatedDemo />
+          </AnimatedSection>
         </div>
       </section>
 
