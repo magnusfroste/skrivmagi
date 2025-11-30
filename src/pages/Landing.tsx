@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedSection } from "@/components/landing/AnimatedSection";
 import { AnimatedDemo } from "@/components/landing/AnimatedDemo";
+import { InteractiveDemo } from "@/components/landing/InteractiveDemo";
 import { 
   Sparkles, 
   BookOpen, 
   Palette, 
-  Volume2, 
+  Volume2,
   Bot, 
   Share2, 
   Mic, 
@@ -168,6 +169,11 @@ const Landing = () => {
               Se hur det fungerar
             </h3>
             <AnimatedDemo />
+          </AnimatedSection>
+
+          {/* Interactive Demo */}
+          <AnimatedSection delay={500} className="mt-12 max-w-3xl mx-auto">
+            <InteractiveDemo />
           </AnimatedSection>
         </div>
       </section>
