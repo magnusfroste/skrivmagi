@@ -180,6 +180,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_students_in_teacher_classes: {
+        Args: { _teacher_id: string }
+        Returns: string[]
+      }
+      get_teacher_class_ids: {
+        Args: { _teacher_id: string }
+        Returns: string[]
+      }
+      get_user_class_id: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
