@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { del, karaktar, plats, tid, kansla, problem } = await req.json();
+    const { del, karaktar, plats, tid, kansla, problem, previousParts } = await req.json();
 
     const delMap: Record<string, string> = {
       inledning: 'INLEDNING',
@@ -22,16 +22,35 @@ serve(async (req) => {
       avslutning: 'AVSLUTNING'
     };
 
-    const prompt = `Du är en snäll lärare i svenska åk 3. Skriv 1–3 korta, levande meningar på enkel svenska till just denna del av sagan. Använd bara informationen nedan.
+    // Build context from previous parts
+    let contextSection = '';
+    if (previousParts) {
+      if (del === 'huvuddel' && previousParts.inledning) {
+        contextSection = `\n\nTIDIGARE I SAGAN (Inledning):\n"${previousParts.inledning}"\n\nFortsätt berättelsen och bygg vidare på det som hänt i inledningen.`;
+      } else if (del === 'avslutning') {
+        const parts = [];
+        if (previousParts.inledning) {
+          parts.push(`Inledning: "${previousParts.inledning}"`);
+        }
+        if (previousParts.huvuddel) {
+          parts.push(`Huvuddel: "${previousParts.huvuddel}"`);
+        }
+        if (parts.length > 0) {
+          contextSection = `\n\nTIDIGARE I SAGAN:\n${parts.join('\n\n')}\n\nAvsluta berättelsen på ett passande sätt som knyter ihop sagan.`;
+        }
+      }
+    }
+
+    const prompt = `Du är en snäll lärare i svenska åk 3. Skriv 1–3 korta, levande meningar på enkel svenska till just denna del av sagan. Använd informationen nedan.
 
 Del: ${delMap[del] || del}
 ${karaktar ? `Karaktär: ${karaktar}` : ''}
 ${plats ? `Plats: ${plats}` : ''}
 ${tid ? `Tid/väder: ${tid}` : ''}
 ${kansla ? `Känsla: ${kansla}` : ''}
-${problem ? `Problem: ${problem}` : ''}
+${problem ? `Problem: ${problem}` : ''}${contextSection}
 
-Skriv bara meningarna, inget annat.`;
+Skriv bara meningarna, inget annat. Se till att texten passar ihop med resten av sagan.`;
 
     console.log('Generating text with prompt:', prompt);
 
@@ -44,7 +63,7 @@ Skriv bara meningarna, inget annat.`;
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'Du är en hjälpsam assistent som skriver sagor för barn i årskurs 2-3 på enkel svenska.' },
+          { role: 'system', content: 'Du är en hjälpsam assistent som skriver sammanhängande sagor för barn i årskurs 2-3 på enkel svenska. Du ser till att varje del av sagan bygger vidare på tidigare delar så att berättelsen blir en sammanhängande helhet.' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 200,
