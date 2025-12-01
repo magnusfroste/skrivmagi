@@ -92,6 +92,15 @@ export default function StoryBuilder() {
       return acc;
     }, {} as Record<string, string>);
 
+    // Build previous parts context for coherent story
+    const previousParts: Record<string, string> = {};
+    if (zone === 'huvuddel' && texts.inledning) {
+      previousParts.inledning = texts.inledning;
+    } else if (zone === 'avslutning') {
+      if (texts.inledning) previousParts.inledning = texts.inledning;
+      if (texts.huvuddel) previousParts.huvuddel = texts.huvuddel;
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('generate-text', {
         body: {
@@ -100,7 +109,8 @@ export default function StoryBuilder() {
           plats: cardsByCategory.plats,
           tid: cardsByCategory.tid,
           kansla: cardsByCategory.kansla,
-          problem: cardsByCategory.problem
+          problem: cardsByCategory.problem,
+          previousParts: Object.keys(previousParts).length > 0 ? previousParts : undefined
         }
       });
 
