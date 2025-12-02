@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-import { Sparkles, CheckCircle } from 'lucide-react';
+import { Sparkles, CheckCircle, User, MapPin, AlertTriangle } from 'lucide-react';
 
 const demoCards = [
-  { id: 1, emoji: '🐉', text: 'En modig drake', color: 'bg-pink-100 border-pink-300' },
-  { id: 2, emoji: '🏰', text: 'I ett slott', color: 'bg-purple-100 border-purple-300' },
-  { id: 3, emoji: '✨', text: 'Magisk kraft', color: 'bg-blue-100 border-blue-300' },
+  { id: 1, emoji: '🐉', text: 'En modig drake', kategori: 'karaktar', Icon: User },
+  { id: 2, emoji: '🏰', text: 'I ett slott', kategori: 'plats', Icon: MapPin },
+  { id: 3, emoji: '⚡', text: 'Något oväntat', kategori: 'problem', Icon: AlertTriangle },
 ];
 
+const categoryColors = {
+  karaktar: 'bg-purple-100 border-purple-300 text-purple-700',
+  plats: 'bg-green-100 border-green-300 text-green-700',
+  problem: 'bg-orange-100 border-orange-300 text-orange-700',
+};
+
 const zones = [
-  { id: 'inledning', label: 'Inledning', color: 'bg-emerald-50 border-emerald-200' },
-  { id: 'huvuddel', label: 'Huvuddel', color: 'bg-amber-50 border-amber-200' },
-  { id: 'avslutning', label: 'Avslutning', color: 'bg-rose-50 border-rose-200' },
+  { id: 'inledning', label: 'Inledning', emoji: '🌅', headerColor: 'bg-green-100 text-green-800', borderColor: 'border-green-400' },
+  { id: 'huvuddel', label: 'Huvuddel', emoji: '⚡', headerColor: 'bg-yellow-100 text-yellow-800', borderColor: 'border-yellow-400' },
+  { id: 'avslutning', label: 'Avslutning', emoji: '🌟', headerColor: 'bg-blue-100 text-blue-800', borderColor: 'border-blue-400' },
 ];
 
 export const AnimatedDemo = () => {
@@ -28,15 +34,10 @@ export const AnimatedDemo = () => {
     if (!isVisible) return;
 
     const sequence = [
-      // Step 1: Place first card
       () => setPlacedCards(prev => ({ ...prev, inledning: demoCards[0] })),
-      // Step 2: Place second card
       () => setPlacedCards(prev => ({ ...prev, huvuddel: demoCards[1] })),
-      // Step 3: Place third card
       () => setPlacedCards(prev => ({ ...prev, avslutning: demoCards[2] })),
-      // Step 4: Show completion
       () => setStep(4),
-      // Reset and loop
       () => {
         setPlacedCards({ inledning: null, huvuddel: null, avslutning: null });
         setStep(0);
@@ -69,16 +70,20 @@ export const AnimatedDemo = () => {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Card library */}
           <div>
-            <h4 className="text-sm font-semibold text-muted-foreground mb-3">Kortbibliotek</h4>
+            <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+              📚 Kortbibliotek
+            </h4>
             <div className="space-y-2">
-              {demoCards.map((card, index) => {
+              {demoCards.map((card) => {
                 const isPlaced = Object.values(placedCards).some(p => p?.id === card.id);
+                const colorClass = categoryColors[card.kategori as keyof typeof categoryColors];
+                const Icon = card.Icon;
                 return (
                   <div
                     key={card.id}
                     className={`
                       p-3 rounded-lg border-2 transition-all duration-500
-                      ${card.color}
+                      ${colorClass}
                       ${isPlaced ? 'opacity-30 scale-95' : 'opacity-100 scale-100'}
                     `}
                     style={{
@@ -86,7 +91,7 @@ export const AnimatedDemo = () => {
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">{card.emoji}</span>
+                      <Icon className="h-4 w-4 flex-shrink-0" />
                       <span className="font-medium text-sm">{card.text}</span>
                     </div>
                   </div>
@@ -105,21 +110,31 @@ export const AnimatedDemo = () => {
                   <div
                     key={zone.id}
                     className={`
-                      p-3 rounded-lg border-2 border-dashed min-h-[60px] transition-all duration-500
-                      ${placedCard ? placedCard.color.replace('border-dashed', '') : zone.color}
+                      rounded-lg border-2 overflow-hidden transition-all duration-500
+                      ${zone.borderColor}
+                      ${!placedCard ? 'border-dashed bg-muted/30' : 'border-solid bg-background'}
                     `}
                   >
-                    {placedCard ? (
-                      <div className="flex items-center gap-2 animate-fade-in">
-                        <span className="text-2xl">{placedCard.emoji}</span>
-                        <span className="font-medium text-sm">{placedCard.text}</span>
-                        <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <span className="text-xs text-muted-foreground">{zone.label}</span>
-                      </div>
-                    )}
+                    {/* Zone header */}
+                    <div className={`px-3 py-1.5 flex items-center gap-2 ${zone.headerColor}`}>
+                      <span className="text-base">{zone.emoji}</span>
+                      <span className="font-semibold text-xs">{zone.label}</span>
+                    </div>
+                    
+                    {/* Zone content */}
+                    <div className="p-3 min-h-[50px] flex items-center">
+                      {placedCard ? (
+                        <div className="flex items-center gap-2 animate-fade-in w-full">
+                          <placedCard.Icon className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium text-sm flex-1">{placedCard.text}</span>
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">
+                          Dra kort hit...
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -146,7 +161,7 @@ export const AnimatedDemo = () => {
             <div className="text-center">
               <Sparkles className="h-12 w-12 text-primary mx-auto mb-2 animate-bounce" />
               <p className="font-bold text-lg">Sagan är klar!</p>
-              <p className="text-sm text-muted-foreground">Nu kan du lyssna på den</p>
+              <p className="text-sm text-muted-foreground">Nu kan du dela den på SagoScenen</p>
             </div>
           </div>
         )}

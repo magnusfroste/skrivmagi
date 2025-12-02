@@ -166,11 +166,11 @@ const Landing = () => {
               <Card className="text-center p-6 hover:shadow-lg transition-shadow border-2 border-blue-200 bg-blue-50/50 h-full">
                 <CardContent className="pt-6">
                   <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-4xl">🔊</span>
+                    <span className="text-4xl">🎭</span>
                   </div>
-                  <h3 className="text-xl font-bold mb-2">3. Dela och lyssna</h3>
+                  <h3 className="text-xl font-bold mb-2">3. Dela på SagoScenen</h3>
                   <p className="text-muted-foreground">
-                    Få din saga uppläst med en riktig sagoröst!
+                    Publicera din saga och samla applåder!
                   </p>
                 </CardContent>
               </Card>
@@ -291,10 +291,9 @@ const Landing = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { icon: Volume2, color: 'blue', title: 'Sagoröst', desc: 'Lyssna på din saga med en riktig berättarröst' },
               { icon: Palette, color: 'pink', title: 'AI-bilder', desc: 'Få unika bilder till varje del av sagan' },
               { icon: Bot, color: 'purple', title: 'AI-coach', desc: 'En snäll hjälpare som ger tips när du fastnar' },
-              { icon: Share2, color: 'green', title: 'Spara & dela', desc: 'Visa din saga för familj och vänner' },
+              { icon: Share2, color: 'green', title: 'SagoScenen', desc: 'Publicera och samla applåder från andra!' },
               { icon: Mic, color: 'orange', title: 'Spela in', desc: 'Läs upp sagan själv och spela in din röst' },
               { icon: Download, color: 'teal', title: 'Ladda ner', desc: 'Skriv ut din saga som en riktig bok' },
             ].map((feature, index) => (
