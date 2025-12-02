@@ -177,7 +177,7 @@ export const InteractiveDemo = () => {
             <div className="text-5xl mb-4 animate-bounce">🎉</div>
             <h3 className="text-xl font-bold mb-2">Fantastiskt!</h3>
             <p className="text-muted-foreground mb-4">
-              Du har byggt din första saga!
+              Du har skapat din första saga!
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button variant="outline" onClick={handleReset}>

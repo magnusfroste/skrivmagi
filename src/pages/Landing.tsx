@@ -150,7 +150,7 @@ const Landing = () => {
                   <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-4xl">🏗️</span>
                   </div>
-                  <h3 className="text-xl font-bold mb-2">2. Bygg din saga</h3>
+                  <h3 className="text-xl font-bold mb-2">2. Skapa din saga</h3>
                   <p className="text-muted-foreground">
                     Dra korten till inledning, huvuddel och avslutning
                   </p>
@@ -215,7 +215,7 @@ const Landing = () => {
                     </div>
                   </div>
                   <p className="text-muted-foreground mb-4">
-                    Dra och släpp färdiga kort för att bygga din saga. AI:n hjälper dig att skriva texten.
+                    Dra och släpp färdiga kort för att skapa din saga. AI:n hjälper dig att skriva texten.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     <span className="font-medium">Perfekt för:</span> Åk 1-2
@@ -322,7 +322,7 @@ const Landing = () => {
                 Ett digitalt verktyg som stöttar läroplanen
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Sagobyggaren är utformat för att stötta undervisningen i svenska enligt Lgr22
+                SkrivMagi är utformat för att stötta undervisningen i svenska enligt Lgr22
               </p>
             </div>
           </AnimatedSection>
