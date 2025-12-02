@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, BookOpen, Pencil, Plus, Loader2, Trash2 } from 'lucide-react';
+import { LageBadge } from '@/components/story/LageBadge';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -147,9 +148,12 @@ export default function MySagor() {
             {sagor.map(saga => (
               <Card key={saga.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{saga.title}</CardTitle>
-                    {getStatusBadge(saga)}
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-lg flex-1">{saga.title}</CardTitle>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <LageBadge lage={saga.lage} />
+                      {getStatusBadge(saga)}
+                    </div>
                   </div>
                   <CardDescription>
                     Skapad {formatDate(saga.created_at)}
