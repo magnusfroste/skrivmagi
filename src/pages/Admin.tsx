@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Loader2, Save, Shield, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Shield, Eye, EyeOff, ExternalLink, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ADMIN_EMAIL = 'magnus@froste.eu';
@@ -20,6 +20,8 @@ export default function Admin() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testImageUrl, setTestImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading) {
@@ -93,6 +95,52 @@ export default function Admin() {
       toast.error('Kunde inte spara inställningar');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const testImageGeneration = async () => {
+    if (!geminiApiKey) {
+      toast.error('Ange API-nyckel först');
+      return;
+    }
+
+    setTesting(true);
+    setTestImageUrl(null);
+
+    try {
+      // First save the API key
+      const { error: keyError } = await supabase.functions.invoke('admin-settings', {
+        body: {
+          action: 'update',
+          key: 'gemini_api_key',
+          value: geminiApiKey,
+        }
+      });
+
+      if (keyError) throw keyError;
+
+      // Then test image generation
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: {
+          prompt: 'En söt robot som håller en röd skateboard, barnteckningsstil, mjuka pastellfärger',
+          saga_id: 'test',
+          part: 'test'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.imageUrl) {
+        setTestImageUrl(data.imageUrl);
+        toast.success('✓ Test lyckades! API-nyckeln fungerar.');
+      } else {
+        throw new Error('Ingen bild genererades');
+      }
+    } catch (error: any) {
+      console.error('Test error:', error);
+      toast.error(`Test misslyckades: ${error.message || 'Okänt fel'}`);
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -210,6 +258,39 @@ export default function Admin() {
                   <p className="text-sm text-muted-foreground">
                     Hämta din API-nyckel från Google AI Studio
                   </p>
+                  
+                  <div className="mt-4 space-y-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={testImageGeneration}
+                      disabled={testing || !geminiApiKey}
+                      className="w-full"
+                    >
+                      {testing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Testar API-nyckel...
+                        </>
+                      ) : (
+                        <>
+                          <TestTube className="h-4 w-4 mr-2" />
+                          Testa API-nyckel
+                        </>
+                      )}
+                    </Button>
+
+                    {testImageUrl && (
+                      <div className="border rounded-lg p-4 bg-muted/30">
+                        <p className="text-sm font-medium mb-2 text-success">✓ Test lyckades!</p>
+                        <img 
+                          src={testImageUrl} 
+                          alt="Testbild" 
+                          className="w-full rounded-md"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
