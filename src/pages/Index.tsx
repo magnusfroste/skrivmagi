@@ -40,10 +40,10 @@ export default function Index() {
       <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">📚</span>
-              <h1 className="text-xl font-bold">Sagobyggaren</h1>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🪄</span>
+            <h1 className="text-xl font-bold">SkrivMagi</h1>
+          </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground flex items-center gap-1">
                 <GraduationCap className="h-4 w-4" />
@@ -94,12 +94,15 @@ export default function Index() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">📚</span>
-            <h1 className="text-xl font-bold">Sagobyggaren</h1>
+            <span className="text-2xl">🪄</span>
+            <h1 className="text-xl font-bold">SkrivMagi</h1>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" onClick={() => navigate('/mina-sagor')}>
               Mina sagor
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/sagoscenen')}>
+              🎭 SagoScenen
             </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" />
@@ -111,7 +114,7 @@ export default function Index() {
 
       <main className="container py-8">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">Välkommen till Sagobyggaren! ✨</h2>
+          <h2 className="text-4xl font-bold mb-4">Välkommen till SkrivMagi! 🪄✨</h2>
           <p className="text-xl text-muted-foreground">Välj hur du vill bygga din saga</p>
         </div>
 

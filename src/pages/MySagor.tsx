@@ -108,14 +108,19 @@ export default function MySagor() {
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
         <div className="container flex h-14 items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/app')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Tillbaka
           </Button>
-          <Button size="sm" onClick={() => navigate('/')}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ny saga
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/sagoscenen')}>
+              🎭 SagoScenen
+            </Button>
+            <Button size="sm" onClick={() => navigate('/app')}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ny saga
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -132,7 +137,7 @@ export default function MySagor() {
             <p className="text-muted-foreground mb-4">
               Du har inte skapat några sagor än. Börja skriva din första saga!
             </p>
-            <Button onClick={() => navigate('/')}>
+            <Button onClick={() => navigate('/app')}>
               <Plus className="h-4 w-4 mr-2" />
               Skapa din första saga
             </Button>

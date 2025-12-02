@@ -63,7 +63,7 @@ export const AnimatedDemo = () => {
             <div className="w-3 h-3 rounded-full bg-yellow-400" />
             <div className="w-3 h-3 rounded-full bg-green-400" />
           </div>
-          <span className="text-xs text-muted-foreground font-medium">Sagobyggaren Demo</span>
+          <span className="text-xs text-muted-foreground font-medium">SkrivMagi Demo</span>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">

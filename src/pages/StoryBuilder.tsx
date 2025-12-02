@@ -169,7 +169,7 @@ export default function StoryBuilder() {
       <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Laddar sagobyggaren...</p>
+          <p className="text-muted-foreground">Laddar SkrivMagi...</p>
         </div>
       </div>
     );

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Heart, Loader2, BookOpen, TrendingUp, Clock } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, BookOpen, Zap, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PublicSaga {
@@ -111,12 +111,20 @@ export default function PublicDiscovery() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Hem
           </Button>
-          <h1 className="text-xl font-bold">Upptäck sagor ✨</h1>
+          <h1 className="text-xl font-bold">🎭 SagoScenen</h1>
           <div className="w-20" />
         </div>
       </header>
 
       <main className="container py-8">
+        {/* Hero section */}
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold mb-4">Välkommen till SagoScenen! 🎭</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Där sagor får liv och unga författare får sin chans i strålkastarljuset
+          </p>
+        </div>
+
         {/* Sort buttons */}
         <div className="flex justify-center gap-2 mb-8">
           <Button
@@ -124,8 +132,8 @@ export default function PublicDiscovery() {
             onClick={() => setSortBy('popular')}
             size="sm"
           >
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Populärast
+            <Zap className="h-4 w-4 mr-2" />
+            I strålkastarljuset
           </Button>
           <Button
             variant={sortBy === 'newest' ? 'default' : 'outline'}
@@ -133,7 +141,7 @@ export default function PublicDiscovery() {
             size="sm"
           >
             <Clock className="h-4 w-4 mr-2" />
-            Nyast
+            Premiärer
           </Button>
         </div>
 
@@ -150,7 +158,7 @@ export default function PublicDiscovery() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {sagor.map((saga) => (
               <Card key={saga.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                <Link to={`/saga/public/${saga.share_slug}`}>
+                <Link to={`/sagoscenen/visa/${saga.share_slug}`}>
                   <div className="aspect-[4/3] bg-muted relative">
                     {saga.bild_inledning ? (
                       <img
@@ -166,7 +174,7 @@ export default function PublicDiscovery() {
                   </div>
                 </Link>
                 <CardContent className="p-4">
-                  <Link to={`/saga/public/${saga.share_slug}`}>
+                  <Link to={`/sagoscenen/visa/${saga.share_slug}`}>
                     <h3 className="font-bold text-lg mb-2 line-clamp-1">{saga.title}</h3>
                   </Link>
                   <div className="flex items-center justify-between">
@@ -176,14 +184,12 @@ export default function PublicDiscovery() {
                       onClick={() => handleUpvote(saga.id, saga.share_slug)}
                       disabled={votedSagas.has(saga.id)}
                     >
-                      <Heart
-                        className={`h-4 w-4 mr-1 ${votedSagas.has(saga.id) ? 'fill-red-500 text-red-500' : ''}`}
-                      />
+                      <span className="mr-1">👏</span>
                       {saga.upvotes || 0}
                     </Button>
-                    <Link to={`/saga/public/${saga.share_slug}`}>
+                    <Link to={`/sagoscenen/visa/${saga.share_slug}`}>
                       <Button variant="outline" size="sm">
-                        Läs mer
+                        Se föreställningen
                       </Button>
                     </Link>
                   </div>

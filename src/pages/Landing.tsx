@@ -48,12 +48,15 @@ const Landing = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">Sagobyggaren</span>
+            <span className="text-2xl">🪄</span>
+            <span className="font-bold text-xl">SkrivMagi</span>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => scrollToSection('for-larare')}>
               För lärare
+            </Button>
+            <Button variant="ghost" onClick={() => navigate('/sagoscenen')}>
+              🎭 SagoScenen
             </Button>
             <Link to="/auth">
               <Button variant="outline">Logga in</Button>
@@ -74,11 +77,11 @@ const Landing = () => {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent animate-fade-in">
-            Bygg din egen saga! ✨
+            SkrivMagi ✨
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in">
-            Dra, släpp och skapa magiska berättelser med AI-hjälp. 
+            Skapa magi med ord! 🪄✨
             Perfekt för elever i årskurs 1-3!
           </p>
           
@@ -508,8 +511,8 @@ const Landing = () => {
       <footer className="py-8 px-4 bg-background border-t">
         <div className="container mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <BookOpen className="h-5 w-5 text-primary" />
-            <span className="font-bold">Sagobyggaren</span>
+            <span className="text-2xl">🪄</span>
+            <span className="font-bold">SkrivMagi</span>
           </div>
           <p className="text-sm text-muted-foreground">
             Ett pedagogiskt verktyg för kreativt skrivande i skolan
