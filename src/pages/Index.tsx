@@ -88,9 +88,9 @@ export default function Index() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Pencil className="h-5 w-5" />
-                  Testa sagobyggaren
+                  Testa SkrivMagi
                 </CardTitle>
-                <CardDescription>Prova själv att bygga en saga</CardDescription>
+                <CardDescription>Prova själv att skapa en saga</CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -129,7 +129,7 @@ export default function Index() {
       <main className="container py-8">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">Välkommen till SkrivMagi! 🪄✨</h2>
-          <p className="text-xl text-muted-foreground">Välj hur du vill bygga din saga</p>
+          <p className="text-xl text-muted-foreground">Välj hur du vill skapa din saga</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
@@ -145,7 +145,7 @@ export default function Index() {
             </CardHeader>
             <CardContent className="text-center">
               <CardDescription className="text-base">
-                Dra och släpp färdiga kort för att bygga din saga. Enklast!
+                Dra och släpp färdiga kort för att skapa din saga. Enklast!
               </CardDescription>
               <div className="mt-4 inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm text-green-700">
                 Perfekt för nybörjare
