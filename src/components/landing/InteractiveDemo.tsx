@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, RotateCcw, ArrowRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles, RotateCcw, ArrowRight, User, MapPin, AlertTriangle, Heart, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface DemoCard {
@@ -10,6 +11,14 @@ interface DemoCard {
   text: string;
   kategori: string;
 }
+
+const categoryConfig = {
+  karaktar: { label: 'Karaktär', icon: User, color: 'bg-purple-100 text-purple-700 border-purple-300' },
+  plats: { label: 'Plats', icon: MapPin, color: 'bg-green-100 text-green-700 border-green-300' },
+  tid: { label: 'Tid', icon: Clock, color: 'bg-blue-100 text-blue-700 border-blue-300' },
+  kansla: { label: 'Känsla', icon: Heart, color: 'bg-pink-100 text-pink-700 border-pink-300' },
+  problem: { label: 'Problem', icon: AlertTriangle, color: 'bg-orange-100 text-orange-700 border-orange-300' }
+};
 
 const demoCards: DemoCard[] = [
   { id: '1', emoji: '🦁', text: 'Ett modigt lejon', kategori: 'karaktar' },
@@ -21,9 +30,9 @@ const demoCards: DemoCard[] = [
 ];
 
 const zones = [
-  { id: 'inledning', label: '📖 Inledning', hint: 'Vem? Var?', color: 'border-emerald-300 bg-emerald-50' },
-  { id: 'huvuddel', label: '⚡ Huvuddel', hint: 'Vad händer?', color: 'border-amber-300 bg-amber-50' },
-  { id: 'avslutning', label: '🌟 Avslutning', hint: 'Hur slutar det?', color: 'border-rose-300 bg-rose-50' },
+  { id: 'inledning', label: 'Inledning', emoji: '🌅', hint: 'Vem? Var?', headerColor: 'bg-green-100 text-green-800', borderColor: 'border-green-400' },
+  { id: 'huvuddel', label: 'Huvuddel', emoji: '⚡', hint: 'Vad händer?', headerColor: 'bg-yellow-100 text-yellow-800', borderColor: 'border-yellow-400' },
+  { id: 'avslutning', label: 'Avslutning', emoji: '🌟', hint: 'Hur slutar det?', headerColor: 'bg-blue-100 text-blue-800', borderColor: 'border-blue-400' },
 ];
 
 export const InteractiveDemo = () => {
@@ -49,7 +58,6 @@ export const InteractiveDemo = () => {
       setPlacedCards(newPlacedCards);
       setDraggedCard(null);
       
-      // Check if all zones are filled
       if (Object.values(newPlacedCards).every(card => card !== null)) {
         setTimeout(() => setIsComplete(true), 300);
       }
@@ -85,21 +93,30 @@ export const InteractiveDemo = () => {
       <div className="grid md:grid-cols-2 gap-6">
         {/* Available cards */}
         <div>
-          <h4 className="text-sm font-semibold text-muted-foreground mb-3">Välj kort</h4>
+          <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+            📚 Välj kort
+          </h4>
           <div className="grid grid-cols-2 gap-2">
-            {availableCards.map((card) => (
-              <div
-                key={card.id}
-                draggable
-                onDragStart={() => handleDragStart(card)}
-                className="p-3 rounded-lg border-2 border-purple-200 bg-background cursor-grab active:cursor-grabbing hover:shadow-md hover:border-purple-400 transition-all select-none"
-              >
-                <div className="flex flex-col items-center gap-1 text-center">
-                  <span className="text-2xl">{card.emoji}</span>
-                  <span className="text-xs font-medium">{card.text}</span>
+            {availableCards.map((card) => {
+              const config = categoryConfig[card.kategori as keyof typeof categoryConfig];
+              const Icon = config.icon;
+              return (
+                <div
+                  key={card.id}
+                  draggable
+                  onDragStart={() => handleDragStart(card)}
+                  className={`p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing hover:shadow-md transition-all select-none ${config.color}`}
+                >
+                  <div className="flex items-start gap-2">
+                    <Icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium">{card.text}</p>
+                      <span className="text-[10px] opacity-70">{config.label}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {availableCards.length === 0 && !isComplete && (
               <p className="col-span-2 text-center text-sm text-muted-foreground py-4">
                 Alla kort är placerade!
@@ -120,25 +137,32 @@ export const InteractiveDemo = () => {
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(zone.id)}
                   className={`
-                    p-3 rounded-lg border-2 border-dashed min-h-[70px] transition-all
-                    ${placedCard ? 'border-solid bg-background' : zone.color}
+                    rounded-lg border-2 overflow-hidden transition-all
+                    ${zone.borderColor}
+                    ${placedCard ? 'border-solid' : 'border-dashed bg-muted/30'}
                     ${!placedCard && draggedCard ? 'ring-2 ring-purple-400 ring-offset-2' : ''}
                   `}
                 >
-                  {placedCard ? (
-                    <div className="flex items-center gap-3 animate-scale-in">
-                      <span className="text-2xl">{placedCard.emoji}</span>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{zone.label}</p>
-                        <p className="font-medium text-sm">{placedCard.text}</p>
+                  {/* Zone header */}
+                  <div className={`px-3 py-1.5 flex items-center gap-2 ${zone.headerColor}`}>
+                    <span className="text-base">{zone.emoji}</span>
+                    <span className="font-semibold text-xs">{zone.label}</span>
+                  </div>
+                  
+                  {/* Zone content */}
+                  <div className="p-3 min-h-[50px] bg-background/50">
+                    {placedCard ? (
+                      <div className="flex items-center gap-2 animate-scale-in">
+                        <Badge variant="secondary" className="py-1 px-2">
+                          {placedCard.text}
+                        </Badge>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center">
-                      <span className="font-medium text-sm">{zone.label}</span>
-                      <span className="text-xs text-muted-foreground">{zone.hint}</span>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-xs text-muted-foreground italic">{zone.hint}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
