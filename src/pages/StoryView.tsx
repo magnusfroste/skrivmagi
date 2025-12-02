@@ -38,6 +38,7 @@ export default function StoryView() {
   const [isSharing, setIsSharing] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [selectedVoice, setSelectedVoice] = useState('sara');
+  const [ttsEnabled, setTtsEnabled] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -48,8 +49,21 @@ export default function StoryView() {
 
     if (id) {
       loadSaga();
+      loadTtsSettings();
     }
   }, [id, user, authLoading]);
+
+  const loadTtsSettings = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'tts_enabled')
+      .single();
+    
+    if (data) {
+      setTtsEnabled(data.value === 'true');
+    }
+  };
 
   const loadSaga = async () => {
     const { data, error } = await supabase
@@ -275,38 +289,42 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
               )}
             </Button>
             
-            {/* Voice selection */}
-            <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isGeneratingAudio}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sara">👩 Sara</SelectItem>
-                <SelectItem value="freya">👩‍🦱 Freya</SelectItem>
-                <SelectItem value="adam">👨 Adam</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button
-              variant={audioUrl ? "default" : "outline"}
-              size="sm"
-              onClick={generateNarration}
-              disabled={isGeneratingAudio}
-            >
-              {isGeneratingAudio ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Skapar...
-                </>
-              ) : audioUrl ? (
-                <>✓ Uppläsning klar</>
-              ) : (
-                <>
-                  <Volume2 className="h-4 w-4 mr-2" />
-                  🎙️ Skapa uppläsning
-                </>
-              )}
-            </Button>
+            {/* Voice selection - only show if TTS enabled */}
+            {ttsEnabled && (
+              <>
+                <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isGeneratingAudio}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sara">👩 Sara</SelectItem>
+                    <SelectItem value="freya">👩‍🦱 Freya</SelectItem>
+                    <SelectItem value="adam">👨 Adam</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Button
+                  variant={audioUrl ? "default" : "outline"}
+                  size="sm"
+                  onClick={generateNarration}
+                  disabled={isGeneratingAudio}
+                >
+                  {isGeneratingAudio ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Skapar...
+                    </>
+                  ) : audioUrl ? (
+                    <>✓ Uppläsning klar</>
+                  ) : (
+                    <>
+                      <Volume2 className="h-4 w-4 mr-2" />
+                      🎙️ Skapa uppläsning
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -405,8 +423,8 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
               </Button>
             </div>
 
-            {/* Audio player */}
-            {audioUrl && (
+            {/* Audio player - only show if TTS enabled and audio exists */}
+            {ttsEnabled && audioUrl && (
               <div className="mt-4 p-4 bg-muted rounded-lg flex items-center gap-4">
                 <Button size="icon" variant="outline" onClick={playAudio}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}

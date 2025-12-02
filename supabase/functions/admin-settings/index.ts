@@ -51,7 +51,7 @@ serve(async (req) => {
 
     if (action === 'update') {
       // Validate key is allowed
-      const allowedKeys = ['image_provider', 'gemini_api_key'];
+      const allowedKeys = ['image_provider', 'gemini_api_key', 'tts_enabled'];
       if (!allowedKeys.includes(key)) {
         return new Response(
           JSON.stringify({ error: 'Invalid settings key' }), 
