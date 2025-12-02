@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Loader2, Save, Shield, Eye, EyeOff, ExternalLink, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -18,6 +19,7 @@ export default function Admin() {
   const [imageProvider, setImageProvider] = useState<'dalle3' | 'lovable_ai' | 'gemini_direct' | 'imagen_direct'>('dalle3');
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -39,7 +41,7 @@ export default function Admin() {
       const { data, error } = await supabase
         .from('app_settings')
         .select('key, value')
-        .in('key', ['image_provider', 'gemini_api_key']);
+        .in('key', ['image_provider', 'gemini_api_key', 'tts_enabled']);
 
       if (error) throw error;
 
@@ -53,6 +55,9 @@ export default function Admin() {
       }
       if (settings?.gemini_api_key) {
         setGeminiApiKey(settings.gemini_api_key);
+      }
+      if (settings?.tts_enabled) {
+        setTtsEnabled(settings.tts_enabled === 'true');
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -88,6 +93,17 @@ export default function Admin() {
 
         if (keyError) throw keyError;
       }
+
+      // Save TTS enabled setting
+      const { error: ttsError } = await supabase.functions.invoke('admin-settings', {
+        body: {
+          action: 'update',
+          key: 'tts_enabled',
+          value: ttsEnabled.toString()
+        }
+      });
+
+      if (ttsError) throw ttsError;
 
       toast.success('✓ Inställningar sparade');
     } catch (error) {
@@ -293,6 +309,24 @@ export default function Admin() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* TTS Setting */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold mb-4">🎙️ Uppläsning (Text-till-tal)</h3>
+              <div className="flex items-center justify-between border rounded-lg p-4">
+                <div>
+                  <Label htmlFor="tts_enabled" className="font-semibold">Aktivera uppläsning</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Visa "Skapa uppläsning"-knappen i sagvisningen (under utveckling)
+                  </p>
+                </div>
+                <Switch
+                  id="tts_enabled"
+                  checked={ttsEnabled}
+                  onCheckedChange={setTtsEnabled}
+                />
+              </div>
             </div>
 
             <Button onClick={saveSettings} disabled={saving} className="w-full">
