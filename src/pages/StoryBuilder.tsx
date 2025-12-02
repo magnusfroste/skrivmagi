@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { CardLibrary } from '@/components/story/CardLibrary';
 import { StoryZone } from '@/components/story/StoryZone';
 import { AICoach } from '@/components/story/AICoach';
-import { ArrowLeft, Save, BookOpen, Loader2, Check } from 'lucide-react';
+import { ArrowLeft, BookOpen, Loader2, Check, Cloud } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -46,6 +46,7 @@ export default function StoryBuilder() {
   const [currentZone, setCurrentZone] = useState<ZoneType | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Refs to track current values without causing re-renders
@@ -186,6 +187,7 @@ export default function StoryBuilder() {
     
     if (success) {
       setLastSaved(new Date());
+      setHasUnsavedChanges(false);
     }
   }, [updateSaga]);
 
@@ -216,14 +218,17 @@ export default function StoryBuilder() {
   // Memoized text change handlers
   const handleInledningChange = useCallback((text: string) => {
     setTexts(prev => ({ ...prev, inledning: text }));
+    setHasUnsavedChanges(true);
   }, []);
 
   const handleHuvuddelChange = useCallback((text: string) => {
     setTexts(prev => ({ ...prev, huvuddel: text }));
+    setHasUnsavedChanges(true);
   }, []);
 
   const handleAvslutningChange = useCallback((text: string) => {
     setTexts(prev => ({ ...prev, avslutning: text }));
+    setHasUnsavedChanges(true);
   }, []);
 
   const handleSave = async () => {
@@ -247,9 +252,21 @@ export default function StoryBuilder() {
 
     if (success) {
       setLastSaved(new Date());
-      toast.success('Sparat! 💾');
+      setHasUnsavedChanges(false);
     }
   };
+
+  // Warn user about unsaved changes before leaving
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const handleFinish = async () => {
     if (!texts.inledning || !texts.huvuddel || !texts.avslutning) {
@@ -283,27 +300,35 @@ export default function StoryBuilder() {
             </Button>
             <Input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setHasUnsavedChanges(true);
+              }}
               className="max-w-[200px] font-semibold"
               placeholder="Sagans titel..."
             />
           </div>
-          <div className="flex items-center gap-2">
-            {lastSaved && (
-              <span className="text-xs text-muted-foreground">
-                Sparad {new Date(lastSaved).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            )}
-            <Button variant="outline" size="sm" onClick={handleSave} disabled={saving}>
+          <div className="flex items-center gap-3">
+            {/* Auto-save status indicator */}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <>
+                  <Cloud className="h-3.5 w-3.5 animate-pulse" />
+                  <span>Sparar...</span>
+                </>
+              ) : hasUnsavedChanges ? (
+                <>
+                  <Cloud className="h-3.5 w-3.5" />
+                  <span>Osparade ändringar</span>
+                </>
               ) : lastSaved ? (
-                <Check className="h-4 w-4 mr-2 text-green-600" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              {saving ? 'Sparar...' : 'Spara nu'}
-            </Button>
+                <>
+                  <Check className="h-3.5 w-3.5 text-green-600" />
+                  <span>Sparad</span>
+                </>
+              ) : null}
+            </div>
+            
             <Button size="sm" onClick={handleFinish}>
               <BookOpen className="h-4 w-4 mr-2" />
               Visa saga
