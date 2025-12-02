@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaga } from '@/hooks/useSaga';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { CardLibrary } from '@/components/story/CardLibrary';
 import { StoryZone } from '@/components/story/StoryZone';
 import { AICoach } from '@/components/story/AICoach';
-import { ArrowLeft, Save, BookOpen, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, BookOpen, Loader2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,6 +45,8 @@ export default function StoryBuilder() {
   const [draggedCard, setDraggedCard] = useState<StoryCard | null>(null);
   const [currentZone, setCurrentZone] = useState<ZoneType | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -148,6 +150,43 @@ export default function StoryBuilder() {
     }
   };
 
+  // Auto-save function with debounce
+  const debouncedAutoSave = useCallback(async () => {
+    if (!saga) return;
+    
+    const success = await updateSaga({
+      title,
+      inledning_text: texts.inledning || null,
+      huvuddel_text: texts.huvuddel || null,
+      avslutning_text: texts.avslutning || null
+    });
+
+    if (success) {
+      setLastSaved(new Date());
+    }
+  }, [saga, title, texts, updateSaga]);
+
+  // Trigger auto-save on text or title changes
+  useEffect(() => {
+    if (!isInitialLoad && saga) {
+      // Clear existing timeout
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+
+      // Set new timeout for auto-save after 2 seconds of inactivity
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        debouncedAutoSave();
+      }, 2000);
+    }
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [title, texts, isInitialLoad, saga, debouncedAutoSave]);
+
   const handleTextChange = (zone: ZoneType, text: string) => {
     setTexts(prev => ({
       ...prev,
@@ -158,14 +197,22 @@ export default function StoryBuilder() {
   const handleSave = async () => {
     if (!saga) return;
 
-    await updateSaga({
+    // Clear auto-save timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    const success = await updateSaga({
       title,
       inledning_text: texts.inledning || null,
       huvuddel_text: texts.huvuddel || null,
       avslutning_text: texts.avslutning || null
     });
 
-    toast.success('Saga sparad! 💾');
+    if (success) {
+      setLastSaved(new Date());
+      toast.success('Sparat! 💾');
+    }
   };
 
   const handleFinish = async () => {
@@ -206,9 +253,20 @@ export default function StoryBuilder() {
             />
           </div>
           <div className="flex items-center gap-2">
+            {lastSaved && (
+              <span className="text-xs text-muted-foreground">
+                Sparad {new Date(lastSaved).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
             <Button variant="outline" size="sm" onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-              Spara
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : lastSaved ? (
+                <Check className="h-4 w-4 mr-2 text-green-600" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              {saving ? 'Sparar...' : 'Spara nu'}
             </Button>
             <Button size="sm" onClick={handleFinish}>
               <BookOpen className="h-4 w-4 mr-2" />

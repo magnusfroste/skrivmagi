@@ -56,18 +56,26 @@ export function useSaga() {
   const updateSaga = useCallback(async (updates: Partial<Saga>) => {
     if (!saga) return;
     
+    // Optimistic update - update UI immediately
+    const previousSaga = saga;
+    setSaga(prev => prev ? { ...prev, ...updates } : null);
+    
     setSaving(true);
     const { error } = await supabase
       .from('sagor')
       .update(updates)
       .eq('id', saga.id);
 
-    if (error) {
-      toast.error('Kunde inte spara');
-    } else {
-      setSaga(prev => prev ? { ...prev, ...updates } : null);
-    }
     setSaving(false);
+
+    if (error) {
+      // Rollback on error
+      setSaga(previousSaga);
+      toast.error('Kunde inte spara ändringar');
+      return false;
+    }
+    
+    return true;
   }, [saga]);
 
   const loadSaga = useCallback(async (id: string) => {
