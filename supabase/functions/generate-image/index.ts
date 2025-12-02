@@ -47,7 +47,7 @@ Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen 
 
     console.log('Generating image with prompt:', prompt);
 
-    let imageBlob: Blob;
+    let imageBlob: Blob | undefined;
 
     if (provider === 'imagen_direct') {
       // Use Google Imagen API directly with user's API key
@@ -63,49 +63,131 @@ Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen 
 
       console.log('Using Imagen 4.0 with user API key');
       
-      // Call Google's Generative Language API for image generation
-      // Using the correct :predict endpoint and request format
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict`,
-        {
+      // Retry logic with prompt adjustments
+      let lastError: Error | null = null;
+      const maxRetries = 3;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          // Adjust prompt on retries to avoid content filtering
+          let adjustedPrompt = prompt;
+          if (attempt > 1) {
+            adjustedPrompt = prompt + ' Glad och positiv stämning, vänlig och ljus atmosfär.';
+            console.log(`Retry attempt ${attempt} with adjusted prompt`);
+          }
+          
+          // Call Google's Generative Language API for image generation
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict`,
+            {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-goog-api-key': keyData.value
+              },
+              body: JSON.stringify({
+                instances: [{
+                  prompt: adjustedPrompt
+                }],
+                parameters: {
+                  sampleCount: 1
+                }
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Imagen API error:', response.status, errorText);
+            throw new Error(`Imagen API error: ${errorText}`);
+          }
+
+          const data = await response.json();
+          console.log('Imagen API full response:', JSON.stringify(data));
+          
+          const base64Image = data.predictions?.[0]?.bytesBase64Encoded;
+          const filteredReason = data.predictions?.[0]?.filteredReason;
+          
+          if (filteredReason) {
+            console.warn('Image was filtered:', filteredReason);
+            throw new Error(`Image filtered: ${filteredReason}`);
+          }
+          
+          if (!base64Image) {
+            console.error('No image data in response');
+            throw new Error('No image returned from Imagen');
+          }
+
+          // Convert base64 to blob
+          const binaryString = atob(base64Image);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          imageBlob = new Blob([bytes], { type: 'image/png' });
+          
+          console.log(`Generated image with Imagen 4.0 (attempt ${attempt})`);
+          break; // Success, exit retry loop
+          
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error('Unknown error');
+          console.error(`Imagen attempt ${attempt} failed:`, lastError.message);
+          
+          if (attempt < maxRetries) {
+            // Wait 2 seconds before retry
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+      
+      // If all Imagen attempts failed, fallback to Lovable AI
+      if (lastError && !imageBlob) {
+        console.log('All Imagen attempts failed, falling back to Lovable AI');
+        const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+        
+        if (!lovableApiKey) {
+          throw new Error('LOVABLE_API_KEY not configured for fallback');
+        }
+
+        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
-          headers: { 
+          headers: {
+            'Authorization': `Bearer ${lovableApiKey}`,
             'Content-Type': 'application/json',
-            'x-goog-api-key': keyData.value
           },
           body: JSON.stringify({
-            instances: [{
-              prompt: prompt
+            model: 'google/gemini-2.5-flash-image-preview',
+            messages: [{
+              role: 'user',
+              content: prompt
             }],
-            parameters: {
-              sampleCount: 1
-            }
+            modalities: ['image', 'text']
           }),
+        });
+
+        if (!response.ok) {
+          const error = await response.text();
+          console.error('Lovable AI fallback error:', error);
+          throw lastError; // Throw original Imagen error
         }
-      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Imagen API error:', response.status, errorText);
-        throw new Error(`Imagen API error: ${errorText}`);
-      }
+        const data = await response.json();
+        const base64Image = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        
+        if (!base64Image) {
+          throw lastError; // Throw original Imagen error
+        }
 
-      const data = await response.json();
-      const base64Image = data.predictions?.[0]?.bytesBase64Encoded;
-      
-      if (!base64Image) {
-        throw new Error('No image returned from Imagen');
+        const base64Data = base64Image.split(',')[1] || base64Image.replace(/^data:image\/\w+;base64,/, '');
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        imageBlob = new Blob([bytes], { type: 'image/png' });
+        
+        console.log('Generated image with Lovable AI (fallback)');
       }
-
-      // Convert base64 to blob
-      const binaryString = atob(base64Image);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      imageBlob = new Blob([bytes], { type: 'image/png' });
-      
-      console.log('Generated image with Imagen 4.0');
     } else if (provider === 'gemini_direct' || provider === 'lovable_ai') {
       // Use Lovable AI Gateway with Google Gemini
       const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
@@ -195,6 +277,10 @@ Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen 
     }
 
     // Upload to Supabase Storage
+    if (!imageBlob) {
+      throw new Error('Failed to generate image');
+    }
+
     const fileName = `${sagaId}/${partKey}.png`;
 
     const { error: uploadError } = await supabase.storage
