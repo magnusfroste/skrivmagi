@@ -10,6 +10,7 @@ const corsHeaders = {
 // Swedish voices from ElevenLabs
 const VOICES = {
   sarah: 'EXAVITQu4vr4xnSDxMaL', // Sarah - female, child-friendly
+  sara: 'EXAVITQu4vr4xnSDxMaL', // Alias for sarah (without 'h')
   freya: 'jsCqWAovK2LkecY7zXl4', // Freya - female, child-friendly
   adam: 'pNInz6obpgDQGcFmaJgB', // Adam - male
 };
