@@ -111,6 +111,10 @@ export default function Index() {
             <Button variant="outline" size="sm" onClick={() => navigate('/mina-sagor')}>
               Mina sagor
             </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/min-klass')}>
+              <Users className="h-4 w-4 mr-1" />
+              Min klass
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate('/sagoscenen')}>
               🎭 SagoScenen
             </Button>
