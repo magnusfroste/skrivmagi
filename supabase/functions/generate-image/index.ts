@@ -28,6 +28,8 @@ serve(async (req) => {
       .single();
 
     const provider = settings?.value || 'dalle3';
+    
+    console.log('Using provider:', provider);
 
     // Context descriptions for each part
     const partDescriptions: Record<string, string> = {
@@ -44,11 +46,66 @@ Scen: ${text}
 Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen text i bilden, vit bakgrund.`;
 
     console.log('Generating image with prompt:', prompt);
-    console.log('Using provider:', provider);
 
     let imageBlob: Blob;
 
-    if (provider === 'lovable_ai') {
+    if (provider === 'gemini_direct') {
+      // Use user's own Gemini API key
+      const { data: keyData } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'gemini_api_key')
+        .single();
+
+      if (!keyData?.value) {
+        throw new Error('Gemini API key not configured');
+      }
+
+      const apiKey = keyData.value;
+      
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: prompt
+              }]
+            }],
+            generationConfig: {
+              responseModalities: ['image']
+            }
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Google Gemini API error:', error);
+        throw new Error(`Google Gemini API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const base64Image = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      
+      if (!base64Image) {
+        throw new Error('No image returned from Google Gemini API');
+      }
+
+      // Convert base64 to blob
+      const binaryString = atob(base64Image);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      imageBlob = new Blob([bytes], { type: 'image/png' });
+      
+      console.log('Generated image with Google Gemini Direct API');
+    } else if (provider === 'lovable_ai') {
       // Use Lovable AI Gateway with Google Gemini
       const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
       if (!lovableApiKey) {
