@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { ArrowLeft, Volume2, Mic, Download, Send, Loader2, Play, Pause, Image, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -35,6 +37,7 @@ export default function StoryView() {
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 3, part: '' });
   const [isSharing, setIsSharing] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState('sara');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -80,11 +83,17 @@ ${saga.avslutning_text || ''}
 
 Och så levde de lyckliga i alla sina dagar. Slut!`;
 
+    // Estimate time based on text length (roughly 2 seconds per 100 characters)
+    const estimatedSeconds = Math.ceil(fullText.length / 50);
+    toast.info(`🎙️ Skapar uppläsning... Detta tar cirka ${estimatedSeconds} sekunder.`, {
+      duration: 3000
+    });
+
     setIsGeneratingAudio(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text: fullText }
+        body: { text: fullText, voiceId: selectedVoice }
       });
 
       if (error) throw error;
@@ -265,18 +274,38 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
                 </>
               )}
             </Button>
+            
+            {/* Voice selection */}
+            <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isGeneratingAudio}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sara">👩 Sara</SelectItem>
+                <SelectItem value="freya">👩‍🦱 Freya</SelectItem>
+                <SelectItem value="adam">👨 Adam</SelectItem>
+              </SelectContent>
+            </Select>
+            
             <Button
-              variant="outline"
+              variant={audioUrl ? "default" : "outline"}
               size="sm"
               onClick={generateNarration}
               disabled={isGeneratingAudio}
             >
               {isGeneratingAudio ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Skapar...
+                </>
+              ) : audioUrl ? (
+                <>✓ Uppläsning klar</>
               ) : (
-                <Volume2 className="h-4 w-4 mr-2" />
+                <>
+                  <Volume2 className="h-4 w-4 mr-2" />
+                  🎙️ Skapa uppläsning
+                </>
               )}
-              Skapa uppläsning
             </Button>
             <Button
               variant="outline"

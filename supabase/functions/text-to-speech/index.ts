@@ -9,7 +9,7 @@ const corsHeaders = {
 
 // Swedish voices from ElevenLabs
 const VOICES = {
-  bella: 'EXAVITQu4vr4xnSDxMaL', // Sarah - female
+  sara: 'EXAVITQu4vr4xnSDxMaL', // Sarah - female (renamed from bella)
   freya: 'jsCqWAovK2LkecY7zXl4', // Freya - female
   adam: 'pNInz6obpgDQGcFmaJgB', // Adam - male
 };
@@ -20,16 +20,26 @@ serve(async (req) => {
   }
 
   try {
+    // Validate API key
+    if (!elevenLabsApiKey) {
+      console.error('ELEVENLABS_API_KEY is not configured');
+      throw new Error('Text-to-speech service is not configured');
+    }
+
     const { text, voiceId } = await req.json();
 
     if (!text) {
       throw new Error('Text is required');
     }
 
-    const selectedVoice = voiceId || VOICES.bella;
+    const selectedVoice = voiceId || VOICES.sara;
+    console.log('Using voice:', selectedVoice);
 
-    // Add pauses between sections
-    const formattedText = text;
+    // Add pauses between sections for better narration flow
+    // ElevenLabs processes line breaks as natural pauses
+    const formattedText = text
+      .replace(/\n\n/g, '\n\n\n') // Triple line breaks for section pauses
+      .trim();
 
     console.log('Generating speech for text length:', text.length);
 
