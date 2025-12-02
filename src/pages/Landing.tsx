@@ -89,7 +89,7 @@ const Landing = () => {
             <Link to="/auth">
               <Button size="lg" className="text-lg px-8 py-6 gap-2">
                 <Palette className="h-5 w-5" />
-                Börja bygga!
+                Börja skriva!
               </Button>
             </Link>
             <Button 
@@ -476,7 +476,7 @@ const Landing = () => {
                 <div className="text-6xl mb-4">🎨</div>
                 <h3 className="text-2xl font-bold mb-2">För elever</h3>
                 <p className="mb-6 text-white/90">
-                  Skapa ditt konto och börja bygga sagor direkt!
+                  Skapa ditt konto och börja skriva sagor direkt!
                 </p>
                 <Link to="/auth">
                   <Button size="lg" variant="secondary" className="gap-2">
