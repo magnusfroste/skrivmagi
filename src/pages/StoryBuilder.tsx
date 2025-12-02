@@ -47,6 +47,10 @@ export default function StoryBuilder() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Refs to track current values without causing re-renders
+  const titleRef = useRef(title);
+  const textsRef = useRef(texts);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -63,6 +67,15 @@ export default function StoryBuilder() {
       }
     }
   }, [user, saga, createSaga, loadSaga, authLoading, navigate, isInitialLoad]);
+
+  // Update refs when state changes (without triggering auto-save)
+  useEffect(() => {
+    titleRef.current = title;
+  }, [title]);
+
+  useEffect(() => {
+    textsRef.current = texts;
+  }, [texts]);
 
   // Sync saga data to local state ONLY on initial load to prevent overwriting user changes
   useEffect(() => {
@@ -150,34 +163,37 @@ export default function StoryBuilder() {
     }
   };
 
-  // Auto-save function with debounce
+  // Auto-save function using refs to avoid unnecessary re-creations
   const debouncedAutoSave = useCallback(async () => {
     if (!saga) return;
     
     const success = await updateSaga({
-      title,
-      inledning_text: texts.inledning || null,
-      huvuddel_text: texts.huvuddel || null,
-      avslutning_text: texts.avslutning || null
+      title: titleRef.current,
+      inledning_text: textsRef.current.inledning || null,
+      huvuddel_text: textsRef.current.huvuddel || null,
+      avslutning_text: textsRef.current.avslutning || null
     });
 
     if (success) {
       setLastSaved(new Date());
     }
-  }, [saga, title, texts, updateSaga]);
+  }, [saga, updateSaga]);
+
+  // Schedule auto-save with debounce
+  const scheduleAutoSave = useCallback(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      debouncedAutoSave();
+    }, 2000);
+  }, [debouncedAutoSave]);
 
   // Trigger auto-save on text or title changes
   useEffect(() => {
     if (!isInitialLoad && saga) {
-      // Clear existing timeout
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-
-      // Set new timeout for auto-save after 2 seconds of inactivity
-      autoSaveTimeoutRef.current = setTimeout(() => {
-        debouncedAutoSave();
-      }, 2000);
+      scheduleAutoSave();
     }
 
     return () => {
@@ -185,14 +201,20 @@ export default function StoryBuilder() {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [title, texts, isInitialLoad, saga, debouncedAutoSave]);
+  }, [title, texts, isInitialLoad, saga, scheduleAutoSave]);
 
-  const handleTextChange = (zone: ZoneType, text: string) => {
-    setTexts(prev => ({
-      ...prev,
-      [zone]: text
-    }));
-  };
+  // Memoized text change handlers
+  const handleInledningChange = useCallback((text: string) => {
+    setTexts(prev => ({ ...prev, inledning: text }));
+  }, []);
+
+  const handleHuvuddelChange = useCallback((text: string) => {
+    setTexts(prev => ({ ...prev, huvuddel: text }));
+  }, []);
+
+  const handleAvslutningChange = useCallback((text: string) => {
+    setTexts(prev => ({ ...prev, avslutning: text }));
+  }, []);
 
   const handleSave = async () => {
     if (!saga) return;
@@ -283,7 +305,7 @@ export default function StoryBuilder() {
             <StoryZone
               type="inledning"
               text={texts.inledning}
-              onTextChange={(text) => handleTextChange('inledning', text)}
+              onTextChange={handleInledningChange}
               droppedCards={zoneCards.inledning}
               onCardDrop={(card) => handleCardDrop('inledning', card)}
               onCardRemove={(id) => handleCardRemove('inledning', id)}
@@ -295,7 +317,7 @@ export default function StoryBuilder() {
             <StoryZone
               type="huvuddel"
               text={texts.huvuddel}
-              onTextChange={(text) => handleTextChange('huvuddel', text)}
+              onTextChange={handleHuvuddelChange}
               droppedCards={zoneCards.huvuddel}
               onCardDrop={(card) => handleCardDrop('huvuddel', card)}
               onCardRemove={(id) => handleCardRemove('huvuddel', id)}
@@ -307,7 +329,7 @@ export default function StoryBuilder() {
             <StoryZone
               type="avslutning"
               text={texts.avslutning}
-              onTextChange={(text) => handleTextChange('avslutning', text)}
+              onTextChange={handleAvslutningChange}
               droppedCards={zoneCards.avslutning}
               onCardDrop={(card) => handleCardDrop('avslutning', card)}
               onCardRemove={(id) => handleCardRemove('avslutning', id)}
