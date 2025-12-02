@@ -153,14 +153,19 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
 
           if (error) throw error;
 
+          // Update local state immediately for progressive display
+          setSaga(prev => prev ? { ...prev, [part.key]: data.imageUrl } : null);
+          
+          // Navigate to the page that just got its image
+          setCurrentPage(i + 1);
+
+          // Also update in database
           await supabase
             .from('sagor')
             .update({ [part.key]: data.imageUrl })
             .eq('id', saga.id);
         }
       }
-
-      await loadSaga();
       toast.success('Bilder skapade! 🎨');
     } catch (error) {
       console.error('Error generating images:', error);
@@ -244,36 +249,22 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
             Tillbaka
           </Button>
           <div className="flex items-center gap-2">
-            {/* Image generation button with status */}
-            <div className="flex flex-col items-end gap-1">
-              <Button
-                variant={saga.bild_inledning && saga.bild_huvuddel && saga.bild_avslutning ? "default" : "outline"}
-                size="sm"
-                onClick={generateImages}
-                disabled={isGeneratingImages}
-              >
-                {isGeneratingImages ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Skapar {imageProgress.current}/{imageProgress.total}...
-                  </>
-                ) : saga.bild_inledning && saga.bild_huvuddel && saga.bild_avslutning ? (
-                  <>
-                    ✓ Bilder skapade
-                  </>
-                ) : (
-                  <>
-                    <Image className="h-4 w-4 mr-2" />
-                    🎨 Skapa bilder
-                  </>
-                )}
-              </Button>
-              {isGeneratingImages && imageProgress.part && (
-                <span className="text-xs text-muted-foreground">
-                  {imageProgress.part}
-                </span>
+            {/* Image generation button - simplified */}
+            <Button
+              variant={saga.bild_inledning && saga.bild_huvuddel && saga.bild_avslutning ? "default" : "outline"}
+              size="sm"
+              onClick={generateImages}
+              disabled={isGeneratingImages}
+            >
+              {saga.bild_inledning && saga.bild_huvuddel && saga.bild_avslutning ? (
+                <>✓ Bilder skapade</>
+              ) : (
+                <>
+                  <Image className="h-4 w-4 mr-2" />
+                  🎨 Skapa bilder
+                </>
               )}
-            </div>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -314,11 +305,21 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
                 alt={currentPageData.title}
                 className="w-full h-full object-cover"
               />
-            ) : isGeneratingImages ? (
-              <div className="text-center text-muted-foreground">
-                <Loader2 className="h-16 w-16 mx-auto mb-4 animate-spin text-primary" />
-                <p className="font-semibold text-lg">Skapar din bild...</p>
-                <p className="text-sm mt-2">{imageProgress.part}</p>
+            ) : isGeneratingImages && currentPage > 0 ? (
+              <div className="text-center text-muted-foreground space-y-4">
+                <Loader2 className="h-16 w-16 mx-auto animate-spin text-primary" />
+                <div>
+                  <p className="font-semibold text-lg">🎨 Skapar bild för {imageProgress.part}...</p>
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-300"
+                        style={{ width: `${(imageProgress.current / imageProgress.total) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium">{imageProgress.current}/{imageProgress.total}</span>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center text-muted-foreground">

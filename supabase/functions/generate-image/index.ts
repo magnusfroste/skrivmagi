@@ -19,6 +19,16 @@ serve(async (req) => {
   try {
     const { text, sagaId, partKey, title } = await req.json();
 
+    // Get image provider setting
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    const { data: settings } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'image_provider')
+      .single();
+
+    const provider = settings?.value || 'dalle3';
+
     // Context descriptions for each part
     const partDescriptions: Record<string, string> = {
       'bild_inledning': 'början av sagan, där karaktärerna och platsen presenteras',
@@ -34,40 +44,92 @@ Scen: ${text}
 Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen text i bilden, vit bakgrund.`;
 
     console.log('Generating image with prompt:', prompt);
+    console.log('Using provider:', provider);
 
-    // Generate image with OpenAI
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'dall-e-3',
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'standard',
-      }),
-    });
+    let imageBlob: Blob;
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenAI DALL-E error:', error);
-      throw new Error(`OpenAI DALL-E API error: ${error}`);
+    if (provider === 'lovable_ai') {
+      // Use Lovable AI Gateway with Google Gemini
+      const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+      if (!lovableApiKey) {
+        throw new Error('LOVABLE_API_KEY not configured');
+      }
+
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${lovableApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash-image-preview',
+          messages: [{
+            role: 'user',
+            content: prompt
+          }],
+          modalities: ['image', 'text']
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Lovable AI error:', error);
+        throw new Error(`Lovable AI API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const base64Image = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      
+      if (!base64Image) {
+        throw new Error('No image returned from Lovable AI');
+      }
+
+      // Convert base64 to blob
+      const base64Data = base64Image.split(',')[1] || base64Image.replace(/^data:image\/\w+;base64,/, '');
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      imageBlob = new Blob([bytes], { type: 'image/png' });
+      
+      console.log('Generated image with Lovable AI');
+    } else {
+      // Use DALL-E 3
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt: prompt,
+          n: 1,
+          size: '1024x1024',
+          quality: 'standard',
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('OpenAI DALL-E error:', error);
+        throw new Error(`OpenAI DALL-E API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const tempImageUrl = data.data[0].url;
+
+      console.log('Generated temporary image URL:', tempImageUrl);
+
+      // Download the image
+      const imageResponse = await fetch(tempImageUrl);
+      imageBlob = await imageResponse.blob();
+      
+      console.log('Downloaded DALL-E image');
     }
 
-    const data = await response.json();
-    const tempImageUrl = data.data[0].url;
-
-    console.log('Generated temporary image URL:', tempImageUrl);
-
-    // Download the image
-    const imageResponse = await fetch(tempImageUrl);
-    const imageBlob = await imageResponse.blob();
-
     // Upload to Supabase Storage
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     const fileName = `${sagaId}/${partKey}.png`;
 
     const { error: uploadError } = await supabase.storage
