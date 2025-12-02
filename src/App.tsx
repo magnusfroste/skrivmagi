@@ -15,6 +15,7 @@ import PublicStoryView from "./pages/PublicStoryView";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import ClassManagement from "./pages/ClassManagement";
 import ClassOverview from "./pages/ClassOverview";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/larare" element={<TeacherDashboard />} />
             <Route path="/klass" element={<ClassManagement />} />
             <Route path="/min-klass" element={<ClassOverview />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
