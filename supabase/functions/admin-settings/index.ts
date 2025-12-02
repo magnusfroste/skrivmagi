@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
 const ADMIN_EMAIL = 'magnus@froste.eu';
 
@@ -24,8 +25,8 @@ serve(async (req) => {
       throw new Error('No authorization header');
     }
 
-    // Create supabase client with user's JWT
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    // Create supabase client with user's JWT to verify identity
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
