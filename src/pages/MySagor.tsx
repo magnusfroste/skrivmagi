@@ -165,7 +165,7 @@ export default function MySagor() {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => navigate(`/bygg?lage=${saga.lage}&saga=${saga.id}`)}
+                      onClick={() => navigate(`/skapa?lage=${saga.lage}&saga=${saga.id}`)}
                     >
                       <Pencil className="h-4 w-4 mr-2" />
                       Redigera
