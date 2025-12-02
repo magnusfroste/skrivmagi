@@ -31,7 +31,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/app" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/bygg" element={<StoryBuilder />} />
+            <Route path="/skapa" element={<StoryBuilder />} />
             <Route path="/saga/:id" element={<StoryView />} />
             <Route path="/mina-sagor" element={<MySagor />} />
             <Route path="/sagoscenen" element={<PublicDiscovery />} />

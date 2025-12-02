@@ -31,7 +31,7 @@ export default function Index() {
   }
 
   const handleModeSelect = (mode: string) => {
-    navigate(`/bygg?lage=${mode}`);
+    navigate(`/skapa?lage=${mode}`);
   };
 
   // Teacher dashboard redirect
@@ -84,7 +84,7 @@ export default function Index() {
               </CardHeader>
             </Card>
             
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/bygg?lage=pussel')}>
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/skapa?lage=pussel')}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Pencil className="h-5 w-5" />
