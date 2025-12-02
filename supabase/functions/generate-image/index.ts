@@ -17,9 +17,21 @@ serve(async (req) => {
   }
 
   try {
-    const { text, sagaId, partKey } = await req.json();
+    const { text, sagaId, partKey, title } = await req.json();
 
-    const prompt = `Barnteckningsstil, enkel tecknad bild i pastellfärger, ingen text, vit bakgrund: ${text}`;
+    // Context descriptions for each part
+    const partDescriptions: Record<string, string> = {
+      'bild_inledning': 'början av sagan, där karaktärerna och platsen presenteras',
+      'bild_huvuddel': 'mitten av sagan, där det spännande händer',
+      'bild_avslutning': 'slutet av sagan, där allt löser sig'
+    };
+
+    const partContext = partDescriptions[partKey] || 'en scen ur sagan';
+
+    const prompt = `Barnteckningsstil illustration för en saga med titeln "${title}". 
+Detta är ${partContext}.
+Scen: ${text}
+Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen text i bilden, vit bakgrund.`;
 
     console.log('Generating image with prompt:', prompt);
 
