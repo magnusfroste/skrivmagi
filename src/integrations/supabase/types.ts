@@ -100,6 +100,35 @@ export type Database = {
           },
         ]
       }
+      saga_upvotes: {
+        Row: {
+          created_at: string | null
+          id: string
+          saga_id: string
+          voter_identifier: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          saga_id: string
+          voter_identifier: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          saga_id?: string
+          voter_identifier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saga_upvotes_saga_id_fkey"
+            columns: ["saga_id"]
+            isOneToOne: false
+            referencedRelation: "sagor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sagor: {
         Row: {
           audio_elevenlabs_url: string | null
@@ -112,12 +141,15 @@ export type Database = {
           huvuddel_text: string | null
           id: string
           inledning_text: string | null
+          is_public: boolean | null
           lage: string
+          share_slug: string | null
           status: Database["public"]["Enums"]["saga_status"]
           student_id: string
           teacher_comment: string | null
           title: string
           updated_at: string
+          upvotes: number | null
         }
         Insert: {
           audio_elevenlabs_url?: string | null
@@ -130,12 +162,15 @@ export type Database = {
           huvuddel_text?: string | null
           id?: string
           inledning_text?: string | null
+          is_public?: boolean | null
           lage?: string
+          share_slug?: string | null
           status?: Database["public"]["Enums"]["saga_status"]
           student_id: string
           teacher_comment?: string | null
           title?: string
           updated_at?: string
+          upvotes?: number | null
         }
         Update: {
           audio_elevenlabs_url?: string | null
@@ -148,12 +183,15 @@ export type Database = {
           huvuddel_text?: string | null
           id?: string
           inledning_text?: string | null
+          is_public?: boolean | null
           lage?: string
+          share_slug?: string | null
           status?: Database["public"]["Enums"]["saga_status"]
           student_id?: string
           teacher_comment?: string | null
           title?: string
           updated_at?: string
+          upvotes?: number | null
         }
         Relationships: []
       }

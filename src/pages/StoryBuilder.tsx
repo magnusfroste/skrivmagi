@@ -48,14 +48,18 @@ export default function StoryBuilder() {
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
+      return;
     }
-  }, [user, authLoading, navigate]);
 
-  useEffect(() => {
-    if (user && !saga) {
-      createSaga(mode);
+    const existingSagaId = searchParams.get('saga');
+    if (user) {
+      if (existingSagaId && !saga) {
+        // Load existing saga (implement loadSaga in useSaga hook if needed)
+      } else if (!saga && !existingSagaId) {
+        createSaga(mode);
+      }
     }
-  }, [user, saga, mode, createSaga]);
+  }, [user, saga, mode, createSaga, authLoading, navigate, searchParams]);
 
   const handleDragStart = (card: StoryCard) => {
     setDraggedCard(card);
@@ -176,7 +180,7 @@ export default function StoryBuilder() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
         <div className="container flex h-14 items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/app')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Tillbaka
             </Button>
