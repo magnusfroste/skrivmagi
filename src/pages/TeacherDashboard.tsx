@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, BookOpen, Loader2, MessageSquare, Search, User, Sparkles, Users } from 'lucide-react';
+import { LageBadge, LageStats } from '@/components/story/LageBadge';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -20,6 +21,7 @@ import {
 interface StudentSaga {
   id: string;
   title: string;
+  lage: string;
   inledning_text: string | null;
   huvuddel_text: string | null;
   avslutning_text: string | null;
@@ -39,6 +41,7 @@ interface StudentStats {
   totalSagor: number;
   completeSagor: number;
   onStageSagor: number;
+  sagorByLage: Array<{ lage: string }>;
 }
 
 type StatusFilter = 'all' | 'complete' | 'started' | 'not_started';
@@ -137,11 +140,13 @@ export default function TeacherDashboard() {
           totalSagor: 0,
           completeSagor: 0,
           onStageSagor: 0,
+          sagorByLage: [],
         });
       }
 
       const stats = statsMap.get(userId)!;
       stats.totalSagor++;
+      stats.sagorByLage.push({ lage: saga.lage });
       if (saga.inledning_text && saga.huvuddel_text && saga.avslutning_text) {
         stats.completeSagor++;
       }
@@ -326,12 +331,13 @@ export default function TeacherDashboard() {
                         <Badge variant="secondary" className="text-xs">Filtrerad</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span>📚 {stats.totalSagor} sagor</span>
-                      <span>✅ {stats.completeSagor} kompletta</span>
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                      <span>📚 {stats.totalSagor}</span>
+                      <span>✅ {stats.completeSagor}</span>
                       {stats.onStageSagor > 0 && (
-                        <span className="text-primary font-medium">🎭 {stats.onStageSagor} på scenen</span>
+                        <span className="text-primary font-medium">🎭 {stats.onStageSagor}</span>
                       )}
+                      <LageStats sagor={stats.sagorByLage} />
                     </div>
                   </button>
                 ))}
@@ -481,7 +487,10 @@ export default function TeacherDashboard() {
                         <span className="truncate">{saga.profiles?.name || 'Okänd elev'}</span>
                       </CardDescription>
                     </div>
-                    {getStatusBadge(saga)}
+                    <div className="flex gap-1 flex-shrink-0">
+                      <LageBadge lage={saga.lage} />
+                      {getStatusBadge(saga)}
+                    </div>
                   </div>
                   
                   {/* On Stage Badge */}
