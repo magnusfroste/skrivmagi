@@ -49,69 +49,20 @@ Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen 
 
     let imageBlob: Blob;
 
-    if (provider === 'gemini_direct') {
-      // Use user's own Gemini API key
-      const { data: keyData } = await supabase
-        .from('app_settings')
-        .select('value')
-        .eq('key', 'gemini_api_key')
-        .single();
-
-      if (!keyData?.value) {
-        throw new Error('Gemini API key not configured');
-      }
-
-      const apiKey = keyData.value;
-      
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: prompt
-              }]
-            }],
-            generationConfig: {
-              responseModalities: ['image']
-            }
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('Google Gemini API error:', error);
-        throw new Error(`Google Gemini API error: ${error}`);
-      }
-
-      const data = await response.json();
-      const base64Image = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-      
-      if (!base64Image) {
-        throw new Error('No image returned from Google Gemini API');
-      }
-
-      // Convert base64 to blob
-      const binaryString = atob(base64Image);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      imageBlob = new Blob([bytes], { type: 'image/png' });
-      
-      console.log('Generated image with Google Gemini Direct API');
-    } else if (provider === 'lovable_ai') {
+    if (provider === 'gemini_direct' || provider === 'lovable_ai') {
       // Use Lovable AI Gateway with Google Gemini
       const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
       if (!lovableApiKey) {
         throw new Error('LOVABLE_API_KEY not configured');
       }
 
+      // Use latest Gemini image model
+      const model = provider === 'gemini_direct' 
+        ? 'google/gemini-3-pro-image-preview' 
+        : 'google/gemini-2.5-flash-image-preview';
+      
+      console.log('Using Lovable AI with model:', model);
+      
       const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -119,7 +70,7 @@ Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen 
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash-image-preview',
+          model,
           messages: [{
             role: 'user',
             content: prompt
@@ -150,7 +101,7 @@ Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen 
       }
       imageBlob = new Blob([bytes], { type: 'image/png' });
       
-      console.log('Generated image with Lovable AI');
+      console.log('Generated image with Lovable AI using', model);
     } else {
       // Use DALL-E 3
       const response = await fetch('https://api.openai.com/v1/images/generations', {
