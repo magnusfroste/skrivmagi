@@ -14,11 +14,19 @@ interface OfflineSaga {
 }
 
 export function useOfflineStorage() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(() => {
+    // Safe check for SSR and edge cases
+    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+      return navigator.onLine;
+    }
+    return true;
+  });
   const [offlineSagor, setOfflineSagor] = useState<OfflineSaga[]>([]);
 
   // Monitor online/offline status
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
@@ -33,24 +41,35 @@ export function useOfflineStorage() {
 
   // Load offline sagor on mount
   useEffect(() => {
-    const stored = localStorage.getItem(OFFLINE_STORAGE_KEY);
-    if (stored) {
-      try {
-        setOfflineSagor(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse offline sagor:', e);
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const stored = localStorage.getItem(OFFLINE_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setOfflineSagor(parsed);
+        }
       }
+    } catch (e) {
+      console.error('Failed to parse offline sagor:', e);
+      // Clear corrupted data
+      localStorage.removeItem(OFFLINE_STORAGE_KEY);
     }
   }, []);
 
   // Save saga to offline storage
   const saveOffline = useCallback((saga: Omit<OfflineSaga, 'lastModified' | 'needsSync'>) => {
+    if (typeof window === 'undefined') return;
+    
     setOfflineSagor(prev => {
       const existingIndex = prev.findIndex(s => s.id === saga.id);
+      const isCurrentlyOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+      
       const newSaga: OfflineSaga = {
         ...saga,
         lastModified: Date.now(),
-        needsSync: !navigator.onLine,
+        needsSync: !isCurrentlyOnline,
       };
 
       let updated: OfflineSaga[];
@@ -61,7 +80,12 @@ export function useOfflineStorage() {
         updated = [...prev, newSaga];
       }
 
-      localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updated));
+      try {
+        localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save offline saga:', e);
+      }
+      
       return updated;
     });
   }, []);
@@ -77,7 +101,11 @@ export function useOfflineStorage() {
       const updated = prev.map(s => 
         s.id === id ? { ...s, needsSync: false } : s
       );
-      localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updated));
+      try {
+        localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to update synced status:', e);
+      }
       return updated;
     });
   }, []);
@@ -91,7 +119,11 @@ export function useOfflineStorage() {
   const removeOffline = useCallback((id: string) => {
     setOfflineSagor(prev => {
       const updated = prev.filter(s => s.id !== id);
-      localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updated));
+      try {
+        localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to remove offline saga:', e);
+      }
       return updated;
     });
   }, []);
