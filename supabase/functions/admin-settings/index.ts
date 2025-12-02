@@ -25,14 +25,17 @@ serve(async (req) => {
       throw new Error('No authorization header');
     }
 
-    // Create supabase client with user's JWT to verify identity
+    // Create supabase client with anon key
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
+      auth: { persistSession: false }
     });
 
-    // Verify user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Extract token and verify user
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
     if (authError || !user) {
+      console.error('Authentication failed:', authError?.message);
       throw new Error('Unauthorized');
     }
 
