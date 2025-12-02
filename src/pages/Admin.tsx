@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Loader2, Save, Shield } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Loader2, Save, Shield, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ADMIN_EMAIL = 'magnus@froste.eu';
@@ -14,7 +15,9 @@ const ADMIN_EMAIL = 'magnus@froste.eu';
 export default function Admin() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [imageProvider, setImageProvider] = useState<'dalle3' | 'lovable_ai' | 'gemini_direct'>('dalle3');
+  const [imageProvider, setImageProvider] = useState<'dalle3' | 'lovable_ai' | 'gemini_direct' | 'imagen_direct'>('dalle3');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -31,14 +34,24 @@ export default function Admin() {
 
   const loadSettings = async () => {
     try {
-      const { data: providerData, error: providerError } = await supabase
+      const { data, error } = await supabase
         .from('app_settings')
-        .select('value')
-        .eq('key', 'image_provider')
-        .single();
+        .select('key, value')
+        .in('key', ['image_provider', 'gemini_api_key']);
 
-      if (providerError) throw providerError;
-      setImageProvider(providerData.value as 'dalle3' | 'lovable_ai' | 'gemini_direct');
+      if (error) throw error;
+
+      const settings = data?.reduce((acc, setting) => {
+        acc[setting.key] = setting.value;
+        return acc;
+      }, {} as Record<string, string>);
+
+      if (settings?.image_provider) {
+        setImageProvider(settings.image_provider as any);
+      }
+      if (settings?.gemini_api_key) {
+        setGeminiApiKey(settings.gemini_api_key);
+      }
     } catch (error) {
       console.error('Error loading settings:', error);
       toast.error('Kunde inte ladda inställningar');
@@ -60,6 +73,19 @@ export default function Admin() {
       });
 
       if (providerError) throw providerError;
+
+      // Save API key if imagen_direct is selected and key is provided
+      if (imageProvider === 'imagen_direct' && geminiApiKey) {
+        const { error: keyError } = await supabase.functions.invoke('admin-settings', {
+          body: {
+            action: 'update',
+            key: 'gemini_api_key',
+            value: geminiApiKey,
+          }
+        });
+
+        if (keyError) throw keyError;
+      }
 
       toast.success('✓ Inställningar sparade');
     } catch (error) {
@@ -137,8 +163,55 @@ export default function Admin() {
                       </div>
                     </Label>
                   </div>
+
+                  <div className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                    <RadioGroupItem value="imagen_direct" id="imagen_direct" />
+                    <Label htmlFor="imagen_direct" className="flex-1 cursor-pointer">
+                      <div className="font-semibold">🖼️ Imagen 4.0 (egen nyckel)</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Googles senaste modell med din egen API-nyckel
+                      </div>
+                    </Label>
+                  </div>
                 </div>
               </RadioGroup>
+
+              {imageProvider === 'imagen_direct' && (
+                <div className="mt-4 space-y-2">
+                  <Label htmlFor="gemini_api_key">Gemini API-nyckel</Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        id="gemini_api_key"
+                        type={showApiKey ? "text" : "password"}
+                        value={geminiApiKey}
+                        onChange={(e) => setGeminiApiKey(e.target.value)}
+                        placeholder="Din Gemini API-nyckel"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                      >
+                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open('https://aistudio.google.com/apikey', '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Hämta din API-nyckel från Google AI Studio
+                  </p>
+                </div>
+              )}
             </div>
 
             <Button onClick={saveSettings} disabled={saving} className="w-full">
