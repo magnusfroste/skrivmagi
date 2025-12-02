@@ -13,6 +13,7 @@ import MySagor from "./pages/MySagor";
 import PublicDiscovery from "./pages/PublicDiscovery";
 import PublicStoryView from "./pages/PublicStoryView";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import ClassManagement from "./pages/ClassManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/sagoscenen" element={<PublicDiscovery />} />
             <Route path="/sagoscenen/visa/:slug" element={<PublicStoryView />} />
             <Route path="/larare" element={<TeacherDashboard />} />
+            <Route path="/klass" element={<ClassManagement />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

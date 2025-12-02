@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Puzzle, Pencil, Sparkles, LogOut, BookOpen, GraduationCap } from 'lucide-react';
+import { Puzzle, Pencil, Sparkles, LogOut, BookOpen, GraduationCap, Users } from 'lucide-react';
 
 export default function Index() {
   const { user, role, loading, signOut } = useAuth();
@@ -63,7 +63,17 @@ export default function Index() {
             <p className="text-muted-foreground">Se och kommentera dina elevers sagor</p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/klass')}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Min klass
+                </CardTitle>
+                <CardDescription>Hantera dina klasser och elever</CardDescription>
+              </CardHeader>
+            </Card>
+
             <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/larare')}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

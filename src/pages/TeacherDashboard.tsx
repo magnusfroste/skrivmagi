@@ -56,10 +56,28 @@ export default function TeacherDashboard() {
   }, [user, role, authLoading]);
 
   const loadSagor = async () => {
-    // Load all sagor with profiles
+    // Get students in teacher's classes using the security definer function
+    const { data: studentIds, error: studentsError } = await supabase
+      .rpc('get_students_in_teacher_classes', { _teacher_id: user?.id });
+
+    if (studentsError) {
+      console.error('Error loading students:', studentsError);
+      toast.error('Kunde inte ladda elever');
+      setLoading(false);
+      return;
+    }
+
+    if (!studentIds || studentIds.length === 0) {
+      setSagor([]);
+      setLoading(false);
+      return;
+    }
+
+    // Load sagor only from teacher's students
     const { data: sagorData, error: sagorError } = await supabase
       .from('sagor')
       .select('*')
+      .in('student_id', studentIds)
       .order('created_at', { ascending: false });
 
     if (sagorError) {
@@ -70,11 +88,11 @@ export default function TeacherDashboard() {
     }
 
     // Load profiles for each saga
-    const studentIds = [...new Set(sagorData?.map(s => s.student_id) || [])];
+    const uniqueStudentIds = [...new Set(sagorData?.map(s => s.student_id) || [])];
     const { data: profilesData } = await supabase
       .from('profiles')
       .select('user_id, name, email')
-      .in('user_id', studentIds);
+      .in('user_id', uniqueStudentIds);
 
     const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
 
@@ -154,7 +172,7 @@ export default function TeacherDashboard() {
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
         <div className="container flex h-14 items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/app')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Tillbaka
           </Button>

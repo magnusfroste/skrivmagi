@@ -19,18 +19,21 @@ export type Database = {
           class_name: string
           created_at: string
           id: string
+          join_code: string | null
           teacher_id: string
         }
         Insert: {
           class_name: string
           created_at?: string
           id?: string
+          join_code?: string | null
           teacher_id: string
         }
         Update: {
           class_name?: string
           created_at?: string
           id?: string
+          join_code?: string | null
           teacher_id?: string
         }
         Relationships: []
@@ -218,6 +221,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_class_code: { Args: never; Returns: string }
       get_students_in_teacher_classes: {
         Args: { _teacher_id: string }
         Returns: string[]

@@ -9,12 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { BookOpen, GraduationCap, Users } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student');
+  const [classCode, setClassCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user, signUp, signIn } = useAuth();
   const navigate = useNavigate();
@@ -35,6 +37,21 @@ export default function Auth() {
       return;
     }
 
+    // Validate class code for students
+    if (role === 'student' && classCode.trim()) {
+      const { data: classData } = await supabase
+        .from('classes')
+        .select('id')
+        .eq('join_code', classCode.toUpperCase())
+        .single();
+
+      if (!classData) {
+        toast.error('Ogiltig klasskod');
+        setIsLoading(false);
+        return;
+      }
+    }
+
     const { error } = await signUp(email, password, name, role);
 
     if (error) {
@@ -44,7 +61,28 @@ export default function Auth() {
         toast.error('Något gick fel: ' + error.message);
       }
     } else {
-      toast.success('Välkommen till SkrivMagi! 🎉');
+      // Link student to class if class code was provided
+      if (role === 'student' && classCode.trim()) {
+        const { data: classData } = await supabase
+          .from('classes')
+          .select('id, class_name')
+          .eq('join_code', classCode.toUpperCase())
+          .single();
+
+        if (classData) {
+          const { data: { user: newUser } } = await supabase.auth.getUser();
+          if (newUser) {
+            await supabase
+              .from('profiles')
+              .update({ class_id: classData.id })
+              .eq('user_id', newUser.id);
+            
+            toast.success(`Välkommen till SkrivMagi! Du är nu med i ${classData.class_name} 🎉`);
+          }
+        }
+      } else {
+        toast.success('Välkommen till SkrivMagi! 🎉');
+      }
       navigate('/');
     }
 
@@ -186,6 +224,22 @@ export default function Auth() {
                     </SelectContent>
                   </Select>
                 </div>
+                {role === 'student' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="class-code">Klasskod (valfritt)</Label>
+                    <Input
+                      id="class-code"
+                      type="text"
+                      placeholder="T.ex. ABC123"
+                      value={classCode}
+                      onChange={(e) => setClassCode(e.target.value.toUpperCase())}
+                      maxLength={6}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Fråga din lärare om klasskoden för att gå med i klassen
+                    </p>
+                  </div>
+                )}
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Skapar konto...' : 'Skapa konto'}
                 </Button>
