@@ -9,8 +9,8 @@ const corsHeaders = {
 
 // Swedish voices from ElevenLabs
 const VOICES = {
-  sara: 'EXAVITQu4vr4xnSDxMaL', // Sarah - female (renamed from bella)
-  freya: 'jsCqWAovK2LkecY7zXl4', // Freya - female
+  sarah: 'EXAVITQu4vr4xnSDxMaL', // Sarah - female, child-friendly
+  freya: 'jsCqWAovK2LkecY7zXl4', // Freya - female, child-friendly
   adam: 'pNInz6obpgDQGcFmaJgB', // Adam - male
 };
 
@@ -32,7 +32,7 @@ serve(async (req) => {
       throw new Error('Text is required');
     }
 
-    const selectedVoice = voiceId || VOICES.sara;
+    const selectedVoice = voiceId || VOICES.sarah;
     console.log('Using voice:', selectedVoice);
 
     // Add pauses between sections for better narration flow
