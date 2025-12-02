@@ -329,6 +329,13 @@ export default function StoryBuilder() {
               ) : null}
             </div>
             
+            <Button variant="outline" size="sm" onClick={async () => {
+              await handleSave();
+              navigate('/mina-sagor');
+            }}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Spara & gå tillbaka
+            </Button>
             <Button size="sm" onClick={handleFinish}>
               <BookOpen className="h-4 w-4 mr-2" />
               Visa saga
@@ -351,6 +358,7 @@ export default function StoryBuilder() {
               onGenerateText={() => handleGenerateText('inledning')}
               isGenerating={generatingZone === 'inledning'}
               mode={mode}
+              onFocus={() => setCurrentZone('inledning')}
             />
 
             <StoryZone
@@ -363,6 +371,7 @@ export default function StoryBuilder() {
               onGenerateText={() => handleGenerateText('huvuddel')}
               isGenerating={generatingZone === 'huvuddel'}
               mode={mode}
+              onFocus={() => setCurrentZone('huvuddel')}
             />
 
             <StoryZone
@@ -375,6 +384,7 @@ export default function StoryBuilder() {
               onGenerateText={() => handleGenerateText('avslutning')}
               isGenerating={generatingZone === 'avslutning'}
               mode={mode}
+              onFocus={() => setCurrentZone('avslutning')}
             />
           </div>
 

@@ -1,42 +1,51 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Sparkles, Loader2, BookOpen, Zap, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Heart, Sparkles, Star, Clock, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { SagaSkeleton } from '@/components/ui/saga-skeleton';
 
 interface PublicSaga {
   id: string;
   title: string;
-  share_slug: string;
+  share_slug: string | null;
   bild_inledning: string | null;
-  upvotes: number;
+  upvotes: number | null;
   created_at: string;
 }
+
+const SAGAS_PER_PAGE = 12;
 
 export default function PublicDiscovery() {
   const navigate = useNavigate();
   const [sagor, setSagor] = useState<PublicSaga[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [sortBy, setSortBy] = useState<'popular' | 'newest'>('popular');
   const [votedSagas, setVotedSagas] = useState<Set<string>>(new Set());
+  const [votingId, setVotingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadPublicSagor();
-    loadVotedSagas();
-  }, [sortBy]);
+  const loadPublicSagor = useCallback(async (reset = true) => {
+    if (reset) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
 
-  const loadPublicSagor = async () => {
-    setLoading(true);
+    const offset = reset ? 0 : sagor.length;
 
     let query = supabase
       .from('sagor')
       .select('id, title, share_slug, bild_inledning, upvotes, created_at')
-      .eq('is_public', true);
+      .eq('is_public', true)
+      .not('share_slug', 'is', null)
+      .range(offset, offset + SAGAS_PER_PAGE - 1);
 
     if (sortBy === 'popular') {
-      query = query.order('upvotes', { ascending: false });
+      query = query.order('upvotes', { ascending: false, nullsFirst: false });
     } else {
       query = query.order('created_at', { ascending: false });
     }
@@ -47,81 +56,104 @@ export default function PublicDiscovery() {
       console.error('Error loading public sagor:', error);
       toast.error('Kunde inte ladda sagor');
     } else {
-      setSagor(data || []);
+      if (reset) {
+        setSagor(data || []);
+      } else {
+        setSagor(prev => [...prev, ...(data || [])]);
+      }
+      setHasMore((data?.length || 0) === SAGAS_PER_PAGE);
     }
 
     setLoading(false);
-  };
+    setLoadingMore(false);
+  }, [sortBy, sagor.length]);
 
   const loadVotedSagas = () => {
-    const voted = localStorage.getItem('voted_sagas');
-    if (voted) {
-      setVotedSagas(new Set(JSON.parse(voted)));
+    const stored = localStorage.getItem('voted_sagas');
+    if (stored) {
+      setVotedSagas(new Set(JSON.parse(stored)));
     }
   };
 
-  const handleUpvote = async (sagaId: string, shareSlug: string) => {
-    if (votedSagas.has(sagaId)) {
-      toast.info('Du har redan gillat denna saga!');
-      return;
-    }
+  useEffect(() => {
+    loadPublicSagor(true);
+    loadVotedSagas();
+  }, [sortBy]);
+
+  const handleUpvote = async (sagaId: string) => {
+    if (votedSagas.has(sagaId) || votingId) return;
+
+    setVotingId(sagaId);
+
+    // Optimistic update
+    setSagor(prev => prev.map(s => 
+      s.id === sagaId ? { ...s, upvotes: (s.upvotes || 0) + 1 } : s
+    ));
 
     try {
-      // Get current fingerprint (simple version using localStorage)
-      const fingerprint = localStorage.getItem('user_fingerprint') || crypto.randomUUID();
-      localStorage.setItem('user_fingerprint', fingerprint);
-
-      // Insert upvote
-      const { error: upvoteError } = await supabase
-        .from('saga_upvotes')
-        .insert({ saga_id: sagaId, voter_identifier: fingerprint });
-
-      if (upvoteError) throw upvoteError;
-
-      // Update upvotes count
+      // Get current upvotes and increment server-side
       const saga = sagor.find(s => s.id === sagaId);
-      if (saga) {
-        await supabase
-          .from('sagor')
-          .update({ upvotes: saga.upvotes + 1 })
-          .eq('id', sagaId);
-      }
+      const currentUpvotes = saga?.upvotes || 0;
+      
+      const { error: updateError } = await supabase
+        .from('sagor')
+        .update({ upvotes: currentUpvotes + 1 })
+        .eq('id', sagaId);
 
-      // Update local state
-      const newVoted = new Set(votedSagas);
-      newVoted.add(sagaId);
-      setVotedSagas(newVoted);
-      localStorage.setItem('voted_sagas', JSON.stringify([...newVoted]));
+      if (updateError) throw updateError;
 
-      // Reload sagor to get updated counts
-      loadPublicSagor();
+      // Record the vote
+      const visitorId = localStorage.getItem('visitor_id') || crypto.randomUUID();
+      localStorage.setItem('visitor_id', visitorId);
 
-      toast.success('Gilla registrerad! 💖');
+      await supabase
+        .from('saga_upvotes')
+        .insert({ saga_id: sagaId, voter_identifier: visitorId });
+
+      // Update local storage
+      const newVotedSagas = new Set(votedSagas);
+      newVotedSagas.add(sagaId);
+      setVotedSagas(newVotedSagas);
+      localStorage.setItem('voted_sagas', JSON.stringify([...newVotedSagas]));
+
+      toast.success('Applåder! 👏');
     } catch (error) {
-      console.error('Error upvoting saga:', error);
-      toast.error('Kunde inte gilla sagan');
+      // Rollback optimistic update on error
+      setSagor(prev => prev.map(s => 
+        s.id === sagaId ? { ...s, upvotes: (s.upvotes || 1) - 1 } : s
+      ));
+      console.error('Error upvoting:', error);
+      toast.error('Kunde inte registrera din röst');
+    } finally {
+      setVotingId(null);
     }
+  };
+
+  const handleLoadMore = () => {
+    loadPublicSagor(false);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
-      <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
-        <div className="container flex h-14 items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+        <div className="container flex h-14 items-center">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/app')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Hem
+            Tillbaka
           </Button>
-          <h1 className="text-xl font-bold">🎭 SagoScenen</h1>
-          <div className="w-20" />
         </div>
       </header>
 
       <main className="container py-8">
         {/* Hero section */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">Välkommen till SagoScenen! 🎭</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Där sagor får liv och unga författare får sin chans i strålkastarljuset
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-4">
+            <Sparkles className="h-4 w-4" />
+            SagoScenen
+          </div>
+          <h1 className="text-4xl font-bold mb-2">Välkommen till SagoScenen! 🎭</h1>
+          <p className="text-muted-foreground text-lg">
+            Här premiärer de bästa sagorna från alla skrivmagiker
           </p>
         </div>
 
@@ -130,36 +162,44 @@ export default function PublicDiscovery() {
           <Button
             variant={sortBy === 'popular' ? 'default' : 'outline'}
             onClick={() => setSortBy('popular')}
-            size="sm"
+            className="gap-2"
           >
-            <Zap className="h-4 w-4 mr-2" />
+            <Star className="h-4 w-4" />
             I strålkastarljuset
           </Button>
           <Button
             variant={sortBy === 'newest' ? 'default' : 'outline'}
             onClick={() => setSortBy('newest')}
-            size="sm"
+            className="gap-2"
           >
-            <Clock className="h-4 w-4 mr-2" />
+            <Clock className="h-4 w-4" />
             Premiärer
           </Button>
         </div>
 
+        {/* Sagas grid */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SagaSkeleton key={i} />
+            ))}
           </div>
         ) : sagor.length === 0 ? (
-          <div className="text-center py-20">
-            <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-muted-foreground">Inga delade sagor än...</p>
+          <div className="text-center py-12">
+            <p className="text-muted-foreground mb-4">Inga sagor har publicerats ännu</p>
+            <Button onClick={() => navigate('/skapa?lage=pussel')}>
+              Bli först att gå upp på scenen! 🌟
+            </Button>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sagor.map((saga) => (
-              <Card key={saga.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                <Link to={`/sagoscenen/visa/${saga.share_slug}`}>
-                  <div className="aspect-[4/3] bg-muted relative">
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sagor.map((saga) => (
+                <Card key={saga.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div 
+                    className="aspect-video bg-muted cursor-pointer"
+                    onClick={() => navigate(`/sagoscenen/visa/${saga.share_slug}`)}
+                  >
                     {saga.bild_inledning ? (
                       <img
                         src={saga.bild_inledning}
@@ -167,36 +207,69 @@ export default function PublicDiscovery() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <BookOpen className="h-16 w-16 text-muted-foreground opacity-30" />
+                      <div className="w-full h-full flex items-center justify-center text-4xl">
+                        📖
                       </div>
                     )}
                   </div>
-                </Link>
-                <CardContent className="p-4">
-                  <Link to={`/sagoscenen/visa/${saga.share_slug}`}>
-                    <h3 className="font-bold text-lg mb-2 line-clamp-1">{saga.title}</h3>
-                  </Link>
-                  <div className="flex items-center justify-between">
-                    <Button
-                      variant={votedSagas.has(saga.id) ? 'secondary' : 'ghost'}
-                      size="sm"
-                      onClick={() => handleUpvote(saga.id, saga.share_slug)}
-                      disabled={votedSagas.has(saga.id)}
+                  <CardHeader className="pb-2">
+                    <CardTitle 
+                      className="text-lg cursor-pointer hover:text-primary transition-colors line-clamp-1"
+                      onClick={() => navigate(`/sagoscenen/visa/${saga.share_slug}`)}
                     >
-                      <span className="mr-1">👏</span>
-                      {saga.upvotes || 0}
-                    </Button>
-                    <Link to={`/sagoscenen/visa/${saga.share_slug}`}>
-                      <Button variant="outline" size="sm">
-                        Se föreställningen
+                      {saga.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between">
+                      <Button
+                        variant={votedSagas.has(saga.id) ? 'secondary' : 'outline'}
+                        size="sm"
+                        onClick={() => handleUpvote(saga.id)}
+                        disabled={votedSagas.has(saga.id) || votingId === saga.id}
+                        className="gap-2"
+                      >
+                        {votingId === saga.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Heart className={`h-4 w-4 ${votedSagas.has(saga.id) ? 'fill-current' : ''}`} />
+                        )}
+                        {saga.upvotes || 0} applåder
                       </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/sagoscenen/visa/${saga.share_slug}`)}
+                      >
+                        Läs saga →
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Load more button */}
+            {hasMore && (
+              <div className="text-center mt-8">
+                <Button
+                  variant="outline"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="gap-2"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Laddar...
+                    </>
+                  ) : (
+                    'Visa fler sagor'
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

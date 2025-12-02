@@ -1,131 +1,174 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { BookOpen, GraduationCap, Users } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Loader2, User, GraduationCap, Users } from 'lucide-react';
+
+type UserRole = 'student' | 'teacher' | 'parent';
 
 export default function Auth() {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student');
+  const [role, setRole] = useState<UserRole>('student');
   const [classCode, setClassCode] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { user, signUp, signIn } = useAuth();
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [validatedClassId, setValidatedClassId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      navigate('/');
+    if (!authLoading && user) {
+      navigate('/app');
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    if (!name.trim()) {
-      toast.error('Skriv in ditt namn');
-      setIsLoading(false);
+  // Validate class code when it changes (debounced)
+  useEffect(() => {
+    if (role !== 'student' || classCode.length < 6) {
+      setValidatedClassId(null);
       return;
     }
 
-    // Validate class code for students
-    if (role === 'student' && classCode.trim()) {
-      const { data: classData } = await supabase
+    const validateCode = async () => {
+      const { data } = await supabase
         .from('classes')
         .select('id')
         .eq('join_code', classCode.toUpperCase())
-        .single();
+        .maybeSingle();
+      
+      setValidatedClassId(data?.id || null);
+    };
 
-      if (!classData) {
+    const timeout = setTimeout(validateCode, 300);
+    return () => clearTimeout(timeout);
+  }, [classCode, role]);
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password || !name) {
+      toast.error('Fyll i alla fält');
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error('Lösenordet måste vara minst 6 tecken');
+      return;
+    }
+
+    // For students, validate class code
+    if (role === 'student' && classCode) {
+      if (!validatedClassId) {
         toast.error('Ogiltig klasskod');
-        setIsLoading(false);
         return;
       }
     }
 
-    const { error } = await signUp(email, password, name, role);
+    setLoading(true);
+
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { data: authData, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          name,
+          role
+        }
+      }
+    });
 
     if (error) {
+      setLoading(false);
       if (error.message.includes('already registered')) {
         toast.error('E-postadressen är redan registrerad');
       } else {
-        toast.error('Något gick fel: ' + error.message);
+        toast.error(error.message);
       }
-    } else {
-      // Link student to class if class code was provided
-      if (role === 'student' && classCode.trim()) {
-        const { data: classData } = await supabase
-          .from('classes')
-          .select('id, class_name')
-          .eq('join_code', classCode.toUpperCase())
-          .single();
-
-        if (classData) {
-          const { data: { user: newUser } } = await supabase.auth.getUser();
-          if (newUser) {
-            await supabase
-              .from('profiles')
-              .update({ class_id: classData.id })
-              .eq('user_id', newUser.id);
-            
-            toast.success(`Välkommen till SkrivMagi! Du är nu med i ${classData.class_name} 🎉`);
-          }
-        }
-      } else {
-        toast.success('Välkommen till SkrivMagi! 🎉');
-      }
-      navigate('/');
+      return;
     }
 
-    setIsLoading(false);
+    // If student with class code, update profile
+    if (role === 'student' && validatedClassId && authData.user) {
+      // Wait a moment for the profile to be created by the trigger
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      await supabase
+        .from('profiles')
+        .update({ class_id: validatedClassId })
+        .eq('user_id', authData.user.id);
+    }
+
+    setLoading(false);
+    toast.success('Konto skapat! Välkommen till SkrivMagi! ✨');
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    if (!email || !password) {
+      toast.error('Fyll i e-post och lösenord');
+      return;
+    }
 
-    const { error } = await signIn(email, password);
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    setLoading(false);
 
     if (error) {
       if (error.message.includes('Invalid login')) {
         toast.error('Fel e-post eller lösenord');
       } else {
-        toast.error('Något gick fel: ' + error.message);
+        toast.error(error.message);
       }
-    } else {
-      toast.success('Välkommen tillbaka! 📚');
-      navigate('/');
     }
-
-    setIsLoading(false);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   const roleIcons = {
-    student: <BookOpen className="h-4 w-4" />,
+    student: <User className="h-4 w-4" />,
     teacher: <GraduationCap className="h-4 w-4" />,
     parent: <Users className="h-4 w-4" />
+  };
+
+  const roleLabels = {
+    student: 'Elev',
+    teacher: 'Lärare',
+    parent: 'Förälder'
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 text-6xl">🪄</div>
-          <CardTitle className="text-2xl">SkrivMagi</CardTitle>
-          <CardDescription>Skapa magiska sagor och gå upp på scenen! ✨</CardDescription>
+          <CardTitle className="text-2xl">Välkommen till SkrivMagi ✨</CardTitle>
+          <CardDescription>Logga in eller skapa ett konto</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs defaultValue="login">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Logga in</TabsTrigger>
               <TabsTrigger value="register">Skapa konto</TabsTrigger>
             </TabsList>
@@ -137,9 +180,9 @@ export default function Auth() {
                   <Input
                     id="login-email"
                     type="email"
-                    placeholder="din@email.se"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    placeholder="din@epost.se"
                     required
                   />
                 </div>
@@ -148,14 +191,21 @@ export default function Auth() {
                   <Input
                     id="login-password"
                     type="password"
-                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Loggar in...' : 'Logga in'}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loggar in...
+                    </>
+                  ) : (
+                    'Logga in'
+                  )}
                 </Button>
               </form>
             </TabsContent>
@@ -163,85 +213,87 @@ export default function Auth() {
             <TabsContent value="register">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Namn</Label>
+                  <Label htmlFor="reg-name">Namn</Label>
                   <Input
-                    id="name"
+                    id="reg-name"
                     type="text"
-                    placeholder="Ditt namn"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    placeholder="Ditt namn"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-email">E-post</Label>
+                  <Label htmlFor="reg-email">E-post</Label>
                   <Input
-                    id="register-email"
+                    id="reg-email"
                     type="email"
-                    placeholder="din@email.se"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    placeholder="din@epost.se"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-password">Lösenord</Label>
+                  <Label htmlFor="reg-password">Lösenord</Label>
                   <Input
-                    id="register-password"
+                    id="reg-password"
                     type="password"
-                    placeholder="Minst 6 tecken"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Minst 6 tecken"
                     required
-                    minLength={6}
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Jag är</Label>
-                  <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">
-                        <div className="flex items-center gap-2">
-                          {roleIcons.student}
-                          <span>Elev</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="teacher">
-                        <div className="flex items-center gap-2">
-                          {roleIcons.teacher}
-                          <span>Lärare</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="parent">
-                        <div className="flex items-center gap-2">
-                          {roleIcons.parent}
-                          <span>Förälder</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Jag är...</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['student', 'teacher', 'parent'] as UserRole[]).map((r) => (
+                      <Button
+                        key={r}
+                        type="button"
+                        variant={role === r ? 'default' : 'outline'}
+                        className="flex flex-col h-auto py-3 gap-1"
+                        onClick={() => setRole(r)}
+                      >
+                        {roleIcons[r]}
+                        <span className="text-xs">{roleLabels[r]}</span>
+                      </Button>
+                    ))}
+                  </div>
                 </div>
+
                 {role === 'student' && (
                   <div className="space-y-2">
                     <Label htmlFor="class-code">Klasskod (valfritt)</Label>
                     <Input
                       id="class-code"
                       type="text"
-                      placeholder="T.ex. ABC123"
                       value={classCode}
                       onChange={(e) => setClassCode(e.target.value.toUpperCase())}
+                      placeholder="T.ex. ABC123"
                       maxLength={6}
+                      className={classCode.length === 6 ? (validatedClassId ? 'border-green-500' : 'border-destructive') : ''}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Fråga din lärare om klasskoden för att gå med i klassen
-                    </p>
+                    {classCode.length === 6 && !validatedClassId && (
+                      <p className="text-xs text-destructive">Ogiltig klasskod</p>
+                    )}
+                    {validatedClassId && (
+                      <p className="text-xs text-green-600">✓ Klasskod giltig</p>
+                    )}
                   </div>
                 )}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Skapar konto...' : 'Skapa konto'}
+
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Skapar konto...
+                    </>
+                  ) : (
+                    'Skapa konto'
+                  )}
                 </Button>
               </form>
             </TabsContent>
