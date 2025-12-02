@@ -133,6 +133,7 @@ export function StoryZone({
         {/* Text area */}
         {(mode === 'halv' || mode === 'fritt' || text) && (
           <Textarea
+            key={`textarea-${type}`}
             value={text}
             onChange={(e) => onTextChange(e.target.value)}
             placeholder={config.hint}
