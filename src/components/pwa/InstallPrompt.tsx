@@ -11,14 +11,16 @@ interface BeforeInstallPromptEvent extends Event {
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     // Check if already dismissed in this session
-    const wasDismissed = sessionStorage.getItem('pwa-prompt-dismissed');
-    if (wasDismissed) {
-      setDismissed(true);
-      return;
+    try {
+      const wasDismissed = sessionStorage.getItem('pwa-prompt-dismissed');
+      if (wasDismissed) return;
+    } catch {
+      // sessionStorage might not be available
     }
 
     const handler = (e: Event) => {
@@ -37,22 +39,29 @@ export function InstallPrompt() {
   const handleInstall = async () => {
     if (!deferredPrompt) return;
 
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      setShowPrompt(false);
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        setShowPrompt(false);
+      }
+    } catch (e) {
+      console.error('Install prompt error:', e);
     }
     setDeferredPrompt(null);
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    setDismissed(true);
-    sessionStorage.setItem('pwa-prompt-dismissed', 'true');
+    try {
+      sessionStorage.setItem('pwa-prompt-dismissed', 'true');
+    } catch {
+      // sessionStorage might not be available
+    }
   };
 
-  if (!showPrompt || dismissed) {
+  if (!showPrompt) {
     return null;
   }
 
