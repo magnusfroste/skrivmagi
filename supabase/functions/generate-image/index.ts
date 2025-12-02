@@ -49,7 +49,56 @@ Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen 
 
     let imageBlob: Blob;
 
-    if (provider === 'gemini_direct' || provider === 'lovable_ai') {
+    if (provider === 'imagen_direct') {
+      // Use Google Imagen API directly with user's API key
+      const { data: keyData } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'gemini_api_key')
+        .single();
+
+      if (!keyData?.value) {
+        throw new Error('Gemini API key not configured');
+      }
+
+      console.log('Using Imagen 4.0 with user API key');
+      
+      // Call Google's Generative Language API for image generation
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:generateImages?key=${keyData.value}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: prompt,
+            number_of_images: 1,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Imagen API error:', response.status, errorText);
+        throw new Error(`Imagen API error: ${errorText}`);
+      }
+
+      const data = await response.json();
+      const base64Image = data.generatedImages?.[0]?.image;
+      
+      if (!base64Image) {
+        throw new Error('No image returned from Imagen');
+      }
+
+      // Convert base64 to blob
+      const binaryString = atob(base64Image);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      imageBlob = new Blob([bytes], { type: 'image/png' });
+      
+      console.log('Generated image with Imagen 4.0');
+    } else if (provider === 'gemini_direct' || provider === 'lovable_ai') {
       // Use Lovable AI Gateway with Google Gemini
       const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
       if (!lovableApiKey) {
