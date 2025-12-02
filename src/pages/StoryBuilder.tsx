@@ -51,6 +51,8 @@ export default function StoryBuilder() {
   // Refs to track current values without causing re-renders
   const titleRef = useRef(title);
   const textsRef = useRef(texts);
+  const sagaRef = useRef(saga);
+  const isSavingRef = useRef(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -76,6 +78,10 @@ export default function StoryBuilder() {
   useEffect(() => {
     textsRef.current = texts;
   }, [texts]);
+
+  useEffect(() => {
+    sagaRef.current = saga;
+  }, [saga]);
 
   // Sync saga data to local state ONLY on initial load to prevent overwriting user changes
   useEffect(() => {
@@ -165,7 +171,9 @@ export default function StoryBuilder() {
 
   // Auto-save function using refs to avoid unnecessary re-creations
   const debouncedAutoSave = useCallback(async () => {
-    if (!saga) return;
+    if (!sagaRef.current || isSavingRef.current) return;
+    
+    isSavingRef.current = true;
     
     const success = await updateSaga({
       title: titleRef.current,
@@ -174,10 +182,12 @@ export default function StoryBuilder() {
       avslutning_text: textsRef.current.avslutning || null
     });
 
+    isSavingRef.current = false;
+    
     if (success) {
       setLastSaved(new Date());
     }
-  }, [saga, updateSaga]);
+  }, [updateSaga]);
 
   // Schedule auto-save with debounce
   const scheduleAutoSave = useCallback(() => {
@@ -217,12 +227,14 @@ export default function StoryBuilder() {
   }, []);
 
   const handleSave = async () => {
-    if (!saga) return;
+    if (!saga || isSavingRef.current) return;
 
     // Clear auto-save timeout
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
     }
+
+    isSavingRef.current = true;
 
     const success = await updateSaga({
       title,
@@ -230,6 +242,8 @@ export default function StoryBuilder() {
       huvuddel_text: texts.huvuddel || null,
       avslutning_text: texts.avslutning || null
     });
+
+    isSavingRef.current = false;
 
     if (success) {
       setLastSaved(new Date());
