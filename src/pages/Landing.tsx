@@ -1,9 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedSection } from "@/components/landing/AnimatedSection";
 import { AnimatedDemo } from "@/components/landing/AnimatedDemo";
 import { InteractiveDemo } from "@/components/landing/InteractiveDemo";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Sparkles, 
   BookOpen, 
@@ -27,6 +29,15 @@ import {
 } from "lucide-react";
 
 const Landing = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/app');
+    }
+  }, [user, navigate]);
+
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };

@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import StoryBuilder from "./pages/StoryBuilder";
 import StoryView from "./pages/StoryView";
 import MySagor from "./pages/MySagor";
+import PublicDiscovery from "./pages/PublicDiscovery";
+import PublicStoryView from "./pages/PublicStoryView";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +31,8 @@ const App = () => (
             <Route path="/bygg" element={<StoryBuilder />} />
             <Route path="/saga/:id" element={<StoryView />} />
             <Route path="/mina-sagor" element={<MySagor />} />
+            <Route path="/upptack" element={<PublicDiscovery />} />
+            <Route path="/saga/public/:slug" element={<PublicStoryView />} />
             <Route path="/larare" element={<TeacherDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

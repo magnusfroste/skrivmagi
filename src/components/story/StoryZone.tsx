@@ -89,7 +89,7 @@ export function StoryZone({
           <span className="text-xl">{config.emoji}</span>
           <span className="font-bold">{config.label}</span>
         </div>
-        {droppedCards.length > 0 && (mode === 'pussel' || mode === 'halv') && (
+        {droppedCards.length > 0 && mode === 'pussel' && (
           <Button
             size="sm"
             variant="ghost"

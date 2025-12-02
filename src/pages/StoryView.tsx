@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Volume2, Mic, Download, Send, Loader2, Play, Pause, Image } from 'lucide-react';
+import { ArrowLeft, Volume2, Mic, Download, Send, Loader2, Play, Pause, Image, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Saga {
@@ -17,6 +17,8 @@ interface Saga {
   bild_huvuddel: string | null;
   bild_avslutning: string | null;
   audio_elevenlabs_url: string | null;
+  is_public: boolean;
+  share_slug: string | null;
 }
 
 export default function StoryView() {
@@ -30,6 +32,7 @@ export default function StoryView() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -53,9 +56,12 @@ export default function StoryView() {
 
     if (error) {
       toast.error('Kunde inte ladda sagan');
-      navigate('/');
+      navigate('/mina-sagor');
     } else {
       setSaga(data);
+      if (data.audio_elevenlabs_url) {
+        setAudioUrl(data.audio_elevenlabs_url);
+      }
     }
     setLoading(false);
   };
@@ -82,12 +88,30 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
 
       if (error) throw error;
 
+      // Save audio to storage
       const audioBlob = new Blob(
         [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
         { type: 'audio/mpeg' }
       );
-      const url = URL.createObjectURL(audioBlob);
-      setAudioUrl(url);
+      
+      const fileName = `${saga.id}/narration.mp3`;
+      const { error: uploadError } = await supabase.storage
+        .from('saga-ljud')
+        .upload(fileName, audioBlob, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('saga-ljud')
+        .getPublicUrl(fileName);
+
+      // Update saga with audio URL
+      await supabase
+        .from('sagor')
+        .update({ audio_elevenlabs_url: publicUrl })
+        .eq('id', saga.id);
+
+      setAudioUrl(publicUrl);
       toast.success('Uppläsning klar! 🎧');
     } catch (error) {
       console.error('Error generating audio:', error);
@@ -112,7 +136,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
       for (const part of parts) {
         if (part.text) {
           const { data, error } = await supabase.functions.invoke('generate-image', {
-            body: { text: part.text }
+            body: { text: part.text, sagaId: saga.id, partKey: part.key }
           });
 
           if (error) throw error;
@@ -131,6 +155,40 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
       toast.error('Kunde inte skapa bilder');
     } finally {
       setIsGeneratingImages(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!saga) return;
+
+    setIsSharing(true);
+
+    try {
+      // Generate unique slug if not exists
+      let slug = saga.share_slug;
+      if (!slug) {
+        slug = `${saga.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Date.now()}`;
+      }
+
+      // Make saga public
+      const { error } = await supabase
+        .from('sagor')
+        .update({ is_public: true, share_slug: slug })
+        .eq('id', saga.id);
+
+      if (error) throw error;
+
+      // Copy link to clipboard
+      const shareUrl = `${window.location.origin}/saga/public/${slug}`;
+      await navigator.clipboard.writeText(shareUrl);
+
+      toast.success('Länk kopierad! 🎉 Nu kan alla se din saga!');
+      setSaga({ ...saga, is_public: true, share_slug: slug });
+    } catch (error) {
+      console.error('Error sharing saga:', error);
+      toast.error('Kunde inte dela sagan');
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -168,7 +226,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
         <div className="container flex h-14 items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/mina-sagor')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Tillbaka
           </Button>
@@ -198,6 +256,19 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
                 <Volume2 className="h-4 w-4 mr-2" />
               )}
               Skapa uppläsning
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              disabled={isSharing}
+            >
+              {isSharing ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Share2 className="h-4 w-4 mr-2" />
+              )}
+              {saga.is_public ? 'Delad!' : 'Dela'}
             </Button>
           </div>
         </div>
