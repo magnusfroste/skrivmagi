@@ -27,7 +27,7 @@ export default function StoryBuilder() {
   const [searchParams] = useSearchParams();
   const mode = (searchParams.get('lage') as StoryMode) || 'pussel';
 
-  const { saga, createSaga, updateSaga, saving } = useSaga();
+  const { saga, createSaga, updateSaga, loadSaga, saving, loading } = useSaga();
   const { cards, loading: cardsLoading } = useStoryCards();
 
   const [title, setTitle] = useState('Min nya saga');
@@ -52,14 +52,26 @@ export default function StoryBuilder() {
     }
 
     const existingSagaId = searchParams.get('saga');
-    if (user) {
-      if (existingSagaId && !saga) {
-        // Load existing saga (implement loadSaga in useSaga hook if needed)
-      } else if (!saga && !existingSagaId) {
+    if (user && !saga) {
+      if (existingSagaId) {
+        loadSaga(existingSagaId);
+      } else {
         createSaga(mode);
       }
     }
-  }, [user, saga, mode, createSaga, authLoading, navigate, searchParams]);
+  }, [user, saga, mode, createSaga, loadSaga, authLoading, navigate, searchParams]);
+
+  // Sync saga data to local state when saga loads
+  useEffect(() => {
+    if (saga) {
+      setTitle(saga.title || 'Min nya saga');
+      setTexts({
+        inledning: saga.inledning_text || '',
+        huvuddel: saga.huvuddel_text || '',
+        avslutning: saga.avslutning_text || ''
+      });
+    }
+  }, [saga]);
 
   const handleDragStart = (card: StoryCard) => {
     setDraggedCard(card);
@@ -164,7 +176,7 @@ export default function StoryBuilder() {
     navigate(`/saga/${saga?.id}`);
   };
 
-  if (authLoading || cardsLoading) {
+  if (authLoading || cardsLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center">
         <div className="text-center">
