@@ -32,8 +32,17 @@ serve(async (req) => {
       throw new Error('Text is required');
     }
 
-    const selectedVoice = voiceId || VOICES.sarah;
-    console.log('Using voice:', selectedVoice);
+    let selectedVoiceId = VOICES.sarah;
+    if (voiceId) {
+      // Allow both keys ("sara", "freya", "adam") and raw ElevenLabs IDs
+      const key = voiceId as keyof typeof VOICES;
+      if (VOICES[key]) {
+        selectedVoiceId = VOICES[key];
+      } else {
+        selectedVoiceId = voiceId; // fallback: assume caller passed a raw voice ID
+      }
+    }
+    console.log('Using voice:', selectedVoiceId, 'requested:', voiceId);
 
     // Add pauses between sections for better narration flow
     // ElevenLabs processes line breaks as natural pauses
@@ -44,7 +53,7 @@ serve(async (req) => {
     console.log('Generating speech for text length:', text.length);
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}/stream`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}/stream`,
       {
         method: 'POST',
         headers: {
