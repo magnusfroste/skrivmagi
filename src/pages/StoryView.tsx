@@ -32,6 +32,7 @@ export default function StoryView() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [imageProgress, setImageProgress] = useState({ current: 0, total: 3, part: '' });
   const [isSharing, setIsSharing] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -125,18 +126,29 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
     if (!saga) return;
 
     setIsGeneratingImages(true);
+    toast.info('🎨 Skapar bilder... Detta tar cirka 1-2 minuter.', {
+      duration: 5000
+    });
 
     try {
       const parts = [
-        { key: 'bild_inledning', text: saga.inledning_text },
-        { key: 'bild_huvuddel', text: saga.huvuddel_text },
-        { key: 'bild_avslutning', text: saga.avslutning_text }
+        { key: 'bild_inledning', text: saga.inledning_text, name: 'Inledning' },
+        { key: 'bild_huvuddel', text: saga.huvuddel_text, name: 'Huvuddel' },
+        { key: 'bild_avslutning', text: saga.avslutning_text, name: 'Avslutning' }
       ];
 
-      for (const part of parts) {
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
         if (part.text) {
+          setImageProgress({ current: i + 1, total: parts.length, part: part.name });
+          
           const { data, error } = await supabase.functions.invoke('generate-image', {
-            body: { text: part.text, sagaId: saga.id, partKey: part.key }
+            body: { 
+              text: part.text, 
+              sagaId: saga.id, 
+              partKey: part.key,
+              title: saga.title
+            }
           });
 
           if (error) throw error;
@@ -155,6 +167,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
       toast.error('Kunde inte skapa bilder');
     } finally {
       setIsGeneratingImages(false);
+      setImageProgress({ current: 0, total: 3, part: '' });
     }
   };
 
@@ -231,19 +244,36 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
             Tillbaka
           </Button>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={generateImages}
-              disabled={isGeneratingImages}
-            >
-              {isGeneratingImages ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Image className="h-4 w-4 mr-2" />
+            {/* Image generation button with status */}
+            <div className="flex flex-col items-end gap-1">
+              <Button
+                variant={saga.bild_inledning && saga.bild_huvuddel && saga.bild_avslutning ? "default" : "outline"}
+                size="sm"
+                onClick={generateImages}
+                disabled={isGeneratingImages}
+              >
+                {isGeneratingImages ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Skapar {imageProgress.current}/{imageProgress.total}...
+                  </>
+                ) : saga.bild_inledning && saga.bild_huvuddel && saga.bild_avslutning ? (
+                  <>
+                    ✓ Bilder skapade
+                  </>
+                ) : (
+                  <>
+                    <Image className="h-4 w-4 mr-2" />
+                    🎨 Skapa bilder
+                  </>
+                )}
+              </Button>
+              {isGeneratingImages && imageProgress.part && (
+                <span className="text-xs text-muted-foreground">
+                  {imageProgress.part}
+                </span>
               )}
-              Skapa bilder
-            </Button>
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -284,6 +314,12 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
                 alt={currentPageData.title}
                 className="w-full h-full object-cover"
               />
+            ) : isGeneratingImages ? (
+              <div className="text-center text-muted-foreground">
+                <Loader2 className="h-16 w-16 mx-auto mb-4 animate-spin text-primary" />
+                <p className="font-semibold text-lg">Skapar din bild...</p>
+                <p className="text-sm mt-2">{imageProgress.part}</p>
+              </div>
             ) : (
               <div className="text-center text-muted-foreground">
                 <Image className="h-16 w-16 mx-auto mb-2 opacity-50" />
