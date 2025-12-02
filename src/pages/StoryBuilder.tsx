@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaga } from '@/hooks/useSaga';
 import { useStoryCards, StoryCard } from '@/hooks/useStoryCards';
+import { useOfflineStorage } from '@/hooks/useOfflineStorage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CardLibrary } from '@/components/story/CardLibrary';
 import { StoryZone } from '@/components/story/StoryZone';
 import { AICoach } from '@/components/story/AICoach';
-import { ArrowLeft, BookOpen, Loader2, Check, Cloud } from 'lucide-react';
+import { ArrowLeft, BookOpen, Loader2, Check, Cloud, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -29,6 +30,7 @@ export default function StoryBuilder() {
 
   const { saga, createSaga, updateSaga, loadSaga, saving, loading } = useSaga();
   const { cards, loading: cardsLoading } = useStoryCards();
+  const { isOnline, saveOffline, getOfflineSaga, markAsSynced, getSagasNeedingSync } = useOfflineStorage();
 
   const [title, setTitle] = useState('Min nya saga');
   const [zoneCards, setZoneCards] = useState<ZoneCards>({
@@ -96,6 +98,32 @@ export default function StoryBuilder() {
       setIsInitialLoad(false);
     }
   }, [saga, isInitialLoad]);
+
+  // Sync offline data when coming back online
+  useEffect(() => {
+    const syncOfflineData = async () => {
+      if (!isOnline || !saga) return;
+      
+      const sagasToSync = getSagasNeedingSync();
+      const currentSaga = sagasToSync.find(s => s.id === saga.id);
+      
+      if (currentSaga) {
+        const success = await updateSaga({
+          title: currentSaga.title,
+          inledning_text: currentSaga.inledning_text,
+          huvuddel_text: currentSaga.huvuddel_text,
+          avslutning_text: currentSaga.avslutning_text,
+        });
+        
+        if (success) {
+          markAsSynced(saga.id);
+          toast.success('Offline-ändringar synkroniserade!');
+        }
+      }
+    };
+
+    syncOfflineData();
+  }, [isOnline, saga, getSagasNeedingSync, updateSaga, markAsSynced]);
 
   const handleDragStart = (card: StoryCard) => {
     setDraggedCard(card);
@@ -175,21 +203,38 @@ export default function StoryBuilder() {
     if (!sagaRef.current || isSavingRef.current) return;
     
     isSavingRef.current = true;
-    
-    const success = await updateSaga({
+
+    // Always save to offline storage first
+    saveOffline({
+      id: sagaRef.current.id,
       title: titleRef.current,
       inledning_text: textsRef.current.inledning || null,
       huvuddel_text: textsRef.current.huvuddel || null,
-      avslutning_text: textsRef.current.avslutning || null
+      avslutning_text: textsRef.current.avslutning || null,
+      lage: sagaRef.current.lage,
     });
 
-    isSavingRef.current = false;
-    
-    if (success) {
+    // Only try to save to server if online
+    if (isOnline) {
+      const success = await updateSaga({
+        title: titleRef.current,
+        inledning_text: textsRef.current.inledning || null,
+        huvuddel_text: textsRef.current.huvuddel || null,
+        avslutning_text: textsRef.current.avslutning || null
+      });
+
+      if (success) {
+        markAsSynced(sagaRef.current.id);
+        setLastSaved(new Date());
+        setHasUnsavedChanges(false);
+      }
+    } else {
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
     }
-  }, [updateSaga]);
+
+    isSavingRef.current = false;
+  }, [updateSaga, isOnline, saveOffline, markAsSynced]);
 
   // Schedule auto-save with debounce
   const scheduleAutoSave = useCallback(() => {
@@ -311,7 +356,12 @@ export default function StoryBuilder() {
           <div className="flex items-center gap-3">
             {/* Auto-save status indicator */}
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              {saving ? (
+              {!isOnline ? (
+                <>
+                  <WifiOff className="h-3.5 w-3.5 text-orange-500" />
+                  <span className="text-orange-600">Offline</span>
+                </>
+              ) : saving ? (
                 <>
                   <Cloud className="h-3.5 w-3.5 animate-pulse" />
                   <span>Sparar...</span>
