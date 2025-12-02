@@ -443,12 +443,11 @@ const Landing = () => {
 
           <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
             {[
-              "Uppläsning av all text",
-              "Dyslexivänligt typsnitt",
-              "Taligenkänning (diktera)",
-              "Högkontrastläge",
               "Fungerar på surfplatta",
-              "Responsiv design"
+              "Responsiv design",
+              "Stora tydliga knappar",
+              "Lekfull och enkel design",
+              "Automatisk sparning"
             ].map((feature, index) => (
               <AnimatedSection key={feature} delay={index * 50} direction="scale">
                 <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full">
