@@ -22,45 +22,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserRole = async (userId: string): Promise<UserRole | null> => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (data && !error) {
+      return data.role as UserRole;
+    }
+    return null;
+  };
+
   useEffect(() => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      // Get initial session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!isMounted) return;
+      
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const userRole = await fetchUserRole(session.user.id);
+        if (isMounted) {
+          setRole(userRole);
+        }
+      }
+      
+      if (isMounted) {
+        setLoading(false);
+      }
+    };
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          setTimeout(() => {
-            fetchUserRole(session.user.id);
-          }, 0);
+          // Fetch role asynchronously but safely
+          const userRole = await fetchUserRole(session.user.id);
+          if (isMounted) {
+            setRole(userRole);
+          }
         } else {
           setRole(null);
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserRole(session.user.id);
-      }
-      setLoading(false);
-    });
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
-
-  const fetchUserRole = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
-
-    if (data && !error) {
-      setRole(data.role as UserRole);
-    }
-  };
 
   const signUp = async (email: string, password: string, name: string, role: UserRole) => {
     const redirectUrl = `${window.location.origin}/`;

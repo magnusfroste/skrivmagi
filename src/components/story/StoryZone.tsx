@@ -15,6 +15,7 @@ interface StoryZoneProps {
   onGenerateText: () => void;
   isGenerating: boolean;
   mode: 'pussel' | 'halv' | 'fritt';
+  onFocus?: () => void;
 }
 
 const zoneConfig = {
@@ -50,7 +51,8 @@ export function StoryZone({
   onCardRemove,
   onGenerateText,
   isGenerating,
-  mode
+  mode,
+  onFocus
 }: StoryZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const config = zoneConfig[type];
@@ -136,6 +138,7 @@ export function StoryZone({
             key={`textarea-${type}`}
             value={text}
             onChange={(e) => onTextChange(e.target.value)}
+            onFocus={onFocus}
             placeholder={config.hint}
             className="min-h-[100px] resize-none border-2"
             readOnly={mode === 'pussel'}
