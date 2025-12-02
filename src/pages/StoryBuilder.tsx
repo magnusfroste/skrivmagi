@@ -44,6 +44,7 @@ export default function StoryBuilder() {
   const [generatingZone, setGeneratingZone] = useState<ZoneType | null>(null);
   const [draggedCard, setDraggedCard] = useState<StoryCard | null>(null);
   const [currentZone, setCurrentZone] = useState<ZoneType | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -52,26 +53,27 @@ export default function StoryBuilder() {
     }
 
     const existingSagaId = searchParams.get('saga');
-    if (user && !saga) {
+    if (user && !saga && isInitialLoad) {
       if (existingSagaId) {
         loadSaga(existingSagaId);
       } else {
         createSaga(mode);
       }
     }
-  }, [user, saga, mode, createSaga, loadSaga, authLoading, navigate, searchParams]);
+  }, [user, saga, createSaga, loadSaga, authLoading, navigate, isInitialLoad]);
 
-  // Sync saga data to local state when saga loads
+  // Sync saga data to local state ONLY on initial load to prevent overwriting user changes
   useEffect(() => {
-    if (saga) {
+    if (saga && isInitialLoad) {
       setTitle(saga.title || 'Min nya saga');
       setTexts({
         inledning: saga.inledning_text || '',
         huvuddel: saga.huvuddel_text || '',
         avslutning: saga.avslutning_text || ''
       });
+      setIsInitialLoad(false);
     }
-  }, [saga]);
+  }, [saga, isInitialLoad]);
 
   const handleDragStart = (card: StoryCard) => {
     setDraggedCard(card);
