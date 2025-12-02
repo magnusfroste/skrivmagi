@@ -64,14 +64,22 @@ Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen 
       console.log('Using Imagen 4.0 with user API key');
       
       // Call Google's Generative Language API for image generation
+      // Using the correct :predict endpoint and request format
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:generateImages?key=${keyData.value}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': keyData.value
+          },
           body: JSON.stringify({
-            prompt: prompt,
-            number_of_images: 1,
+            instances: [{
+              prompt: prompt
+            }],
+            parameters: {
+              sampleCount: 1
+            }
           }),
         }
       );
@@ -83,7 +91,7 @@ Stil: Enkel tecknad bild i mjuka pastellfärger, vänlig och barnvänlig, ingen 
       }
 
       const data = await response.json();
-      const base64Image = data.generatedImages?.[0]?.image;
+      const base64Image = data.predictions?.[0]?.bytesBase64Encoded;
       
       if (!base64Image) {
         throw new Error('No image returned from Imagen');
