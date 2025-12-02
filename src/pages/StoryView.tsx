@@ -179,10 +179,10 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
       if (error) throw error;
 
       // Copy link to clipboard
-      const shareUrl = `${window.location.origin}/saga/public/${slug}`;
+      const shareUrl = `${window.location.origin}/sagoscenen/visa/${slug}`;
       await navigator.clipboard.writeText(shareUrl);
 
-      toast.success('Länk kopierad! 🎉 Nu kan alla se din saga!');
+      toast.success('Din saga har premiär på SagoScenen! Länk kopierad! 🎭✨');
       setSaga({ ...saga, is_public: true, share_slug: slug });
     } catch (error) {
       console.error('Error sharing saga:', error);
@@ -268,7 +268,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
               ) : (
                 <Share2 className="h-4 w-4 mr-2" />
               )}
-              {saga.is_public ? 'Delad!' : 'Dela'}
+              {saga.is_public ? 'På scenen!' : '🎭 Gå upp på scenen'}
             </Button>
           </div>
         </div>

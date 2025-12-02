@@ -31,8 +31,8 @@ const App = () => (
             <Route path="/bygg" element={<StoryBuilder />} />
             <Route path="/saga/:id" element={<StoryView />} />
             <Route path="/mina-sagor" element={<MySagor />} />
-            <Route path="/upptack" element={<PublicDiscovery />} />
-            <Route path="/saga/public/:slug" element={<PublicStoryView />} />
+            <Route path="/sagoscenen" element={<PublicDiscovery />} />
+            <Route path="/sagoscenen/visa/:slug" element={<PublicStoryView />} />
             <Route path="/larare" element={<TeacherDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

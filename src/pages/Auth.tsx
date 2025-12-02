@@ -44,7 +44,7 @@ export default function Auth() {
         toast.error('Något gick fel: ' + error.message);
       }
     } else {
-      toast.success('Välkommen till Sagobyggaren! 🎉');
+      toast.success('Välkommen till SkrivMagi! 🎉');
       navigate('/');
     }
 
@@ -81,9 +81,9 @@ export default function Auth() {
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 text-6xl">📚</div>
-          <CardTitle className="text-2xl">Sagobyggaren</CardTitle>
-          <CardDescription>Skapa magiska sagor med AI-hjälp</CardDescription>
+          <div className="mx-auto mb-4 text-6xl">🪄</div>
+          <CardTitle className="text-2xl">SkrivMagi</CardTitle>
+          <CardDescription>Skapa magiska sagor och gå upp på scenen! ✨</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
