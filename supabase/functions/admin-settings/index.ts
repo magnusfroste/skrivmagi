@@ -46,15 +46,41 @@ serve(async (req) => {
     const { action, key, value } = await req.json();
 
     if (action === 'update') {
+      // Validate key is allowed
+      const allowedKeys = ['image_provider', 'gemini_api_key'];
+      if (!allowedKeys.includes(key)) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid settings key' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       // Use service role key to bypass RLS
       const adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
       
-      const { error: updateError } = await adminSupabase
+      // Check if setting exists
+      const { data: existing } = await adminSupabase
         .from('app_settings')
-        .update({ value, updated_at: new Date().toISOString(), updated_by: user.id })
-        .eq('key', key);
+        .select('id')
+        .eq('key', key)
+        .single();
 
-      if (updateError) throw updateError;
+      if (existing) {
+        // Update existing
+        const { error: updateError } = await adminSupabase
+          .from('app_settings')
+          .update({ value, updated_at: new Date().toISOString(), updated_by: user.id })
+          .eq('key', key);
+
+        if (updateError) throw updateError;
+      } else {
+        // Insert new
+        const { error: insertError } = await adminSupabase
+          .from('app_settings')
+          .insert({ key, value, updated_by: user.id });
+
+        if (insertError) throw insertError;
+      }
 
       return new Response(
         JSON.stringify({ success: true }), 
