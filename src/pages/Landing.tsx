@@ -9,12 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { 
   Sparkles, 
   BookOpen, 
-  Palette, 
-  Volume2,
-  Bot, 
+  Palette,
   Share2, 
-  Mic, 
-  Download,
   GraduationCap,
   Users,
   BarChart3,
@@ -291,11 +287,11 @@ const Landing = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { icon: Palette, color: 'pink', title: 'AI-bilder', desc: 'Få unika bilder till varje del av sagan' },
-              { icon: Bot, color: 'purple', title: 'AI-coach', desc: 'En snäll hjälpare som ger tips när du fastnar' },
-              { icon: Share2, color: 'green', title: 'SagoScenen', desc: 'Publicera och samla applåder från andra!' },
-              { icon: Mic, color: 'orange', title: 'Spela in', desc: 'Läs upp sagan själv och spela in din röst' },
-              { icon: Download, color: 'teal', title: 'Ladda ner', desc: 'Skriv ut din saga som en riktig bok' },
+              { icon: Palette, color: 'pink', title: 'AI-bilder', desc: 'Få unika bilder till varje del av din saga' },
+              { icon: Share2, color: 'green', title: 'SagoScenen', desc: 'Publicera din saga och samla applåder!' },
+              { icon: Zap, color: 'yellow', title: 'Auto-sparning', desc: 'Din saga sparas automatiskt medan du skriver' },
+              { icon: Puzzle, color: 'purple', title: 'Tre nivåer', desc: 'Från enkelt pusselläge till fritt skrivande' },
+              { icon: Users, color: 'blue', title: 'Klassrum', desc: 'Se klasskamraters sagor och inspireras' },
             ].map((feature, index) => (
               <AnimatedSection key={feature.title} delay={index * 100} direction="scale">
                 <div className="flex items-start gap-4 p-4">
