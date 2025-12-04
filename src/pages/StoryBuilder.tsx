@@ -4,14 +4,22 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSaga } from '@/hooks/useSaga';
 import { useStoryCards, StoryCard } from '@/hooks/useStoryCards';
 import { useOfflineStorage } from '@/hooks/useOfflineStorage';
+import { useOfflineCards } from '@/hooks/useOfflineCards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CardLibrary } from '@/components/story/CardLibrary';
+import { MobileCardDrawer } from '@/components/story/MobileCardDrawer';
 import { StoryZone } from '@/components/story/StoryZone';
 import { AICoach } from '@/components/story/AICoach';
-import { ArrowLeft, BookOpen, Loader2, Check, Cloud, WifiOff } from 'lucide-react';
+import { ArrowLeft, BookOpen, Loader2, Check, Cloud, WifiOff, Menu } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type StoryMode = 'pussel' | 'halv' | 'fritt';
 type ZoneType = 'inledning' | 'huvuddel' | 'avslutning';
@@ -31,6 +39,17 @@ export default function StoryBuilder() {
   const { saga, createSaga, updateSaga, loadSaga, saving, loading } = useSaga();
   const { cards, loading: cardsLoading } = useStoryCards();
   const { isOnline, saveOffline, getOfflineSaga, markAsSynced, getSagasNeedingSync } = useOfflineStorage();
+  const { cacheCards, getCachedCards, isCacheStale } = useOfflineCards();
+
+  // Cache cards when loaded and online
+  useEffect(() => {
+    if (cards.length > 0 && isOnline) {
+      cacheCards(cards);
+    }
+  }, [cards, isOnline, cacheCards]);
+
+  // Use cached cards when offline
+  const availableCards = isOnline || cards.length > 0 ? cards : getCachedCards();
 
   const [title, setTitle] = useState('Min nya saga');
   const [zoneCards, setZoneCards] = useState<ZoneCards>({
@@ -337,11 +356,11 @@ export default function StoryBuilder() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-        <div className="container flex h-14 items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/app')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Tillbaka
+        <div className="container flex h-14 items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+            <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navigate('/app')}>
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Tillbaka</span>
             </Button>
             <Input
               value={title}
@@ -349,13 +368,13 @@ export default function StoryBuilder() {
                 setTitle(e.target.value);
                 setHasUnsavedChanges(true);
               }}
-              className="max-w-[200px] font-semibold"
+              className="max-w-[150px] sm:max-w-[200px] font-semibold"
               placeholder="Sagans titel..."
             />
           </div>
-          <div className="flex items-center gap-3">
-            {/* Auto-save status indicator */}
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Auto-save status indicator - hidden on mobile */}
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
               {!isOnline ? (
                 <>
                   <WifiOff className="h-3.5 w-3.5 text-orange-500" />
@@ -379,14 +398,37 @@ export default function StoryBuilder() {
               ) : null}
             </div>
             
-            <Button variant="outline" size="sm" onClick={async () => {
+            {/* Mobile dropdown menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="sm:hidden">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={async () => {
+                  await handleSave();
+                  navigate('/mina-sagor');
+                }}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Spara & gå tillbaka
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleFinish}>
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Visa saga
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Desktop buttons */}
+            <Button variant="outline" size="sm" className="hidden sm:flex" onClick={async () => {
               await handleSave();
               navigate('/mina-sagor');
             }}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Spara & gå tillbaka
             </Button>
-            <Button size="sm" onClick={handleFinish}>
+            <Button size="sm" className="hidden sm:flex" onClick={handleFinish}>
               <BookOpen className="h-4 w-4 mr-2" />
               Visa saga
             </Button>
@@ -438,17 +480,25 @@ export default function StoryBuilder() {
             />
           </div>
 
-          {/* Card library */}
+          {/* Card library - desktop only */}
           {(mode === 'pussel' || mode === 'halv') && (
-            <div className="lg:sticky lg:top-20 h-[calc(100vh-8rem)]">
+            <div className="hidden lg:block lg:sticky lg:top-20 h-[calc(100vh-8rem)]">
               <CardLibrary
-                cards={cards}
+                cards={availableCards}
                 onDragStart={handleDragStart}
               />
             </div>
           )}
         </div>
       </main>
+
+      {/* Mobile card drawer */}
+      {(mode === 'pussel' || mode === 'halv') && (
+        <MobileCardDrawer
+          cards={availableCards}
+          onCardSelect={(card, zone) => handleCardDrop(zone, card)}
+        />
+      )}
 
       <AICoach currentZone={currentZone} />
     </div>
