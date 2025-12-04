@@ -391,36 +391,38 @@ export default function TeacherDashboard() {
               </div>
 
               {/* Sorting */}
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">Sortera:</span>
-                <Button
-                  variant={sortBy === 'newest' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setSortBy('newest')}
-                >
-                  Nyast
-                </Button>
-                <Button
-                  variant={sortBy === 'oldest' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setSortBy('oldest')}
-                >
-                  Äldst
-                </Button>
-                <Button
-                  variant={sortBy === 'student' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setSortBy('student')}
-                >
-                  Elev A-Ö
-                </Button>
-                <Button
-                  variant={sortBy === 'status' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setSortBy('status')}
-                >
-                  Status
-                </Button>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="text-muted-foreground shrink-0">Sortera:</span>
+                <div className="flex flex-wrap gap-1">
+                  <Button
+                    variant={sortBy === 'newest' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSortBy('newest')}
+                  >
+                    Nyast
+                  </Button>
+                  <Button
+                    variant={sortBy === 'oldest' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSortBy('oldest')}
+                  >
+                    Äldst
+                  </Button>
+                  <Button
+                    variant={sortBy === 'student' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSortBy('student')}
+                  >
+                    Elev A-Ö
+                  </Button>
+                  <Button
+                    variant={sortBy === 'status' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSortBy('status')}
+                  >
+                    Status
+                  </Button>
+                </div>
               </div>
 
               {/* Active filters indicator */}

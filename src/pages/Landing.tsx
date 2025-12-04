@@ -1,11 +1,18 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedSection } from "@/components/landing/AnimatedSection";
 import { AnimatedDemo } from "@/components/landing/AnimatedDemo";
 import { InteractiveDemo } from "@/components/landing/InteractiveDemo";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { 
   Sparkles, 
   BookOpen, 
@@ -21,12 +28,14 @@ import {
   Wand2,
   Star,
   Heart,
-  Zap
+  Zap,
+  Menu
 } from "lucide-react";
 
 const Landing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -36,6 +45,7 @@ const Landing = () => {
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -47,7 +57,9 @@ const Landing = () => {
             <span className="text-2xl">🪄</span>
             <span className="font-bold text-xl">SkrivMagi</span>
           </div>
-          <div className="flex items-center gap-4">
+          
+          {/* Desktop navigation */}
+          <div className="hidden md:flex items-center gap-4">
             <Button variant="ghost" onClick={() => scrollToSection('for-larare')}>
               För lärare
             </Button>
@@ -60,6 +72,55 @@ const Landing = () => {
             <Link to="/auth">
               <Button>Kom igång</Button>
             </Link>
+          </div>
+
+          {/* Mobile navigation */}
+          <div className="flex md:hidden items-center gap-2">
+            <Link to="/auth">
+              <Button size="sm">Kom igång</Button>
+            </Link>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px]">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <span className="text-2xl">🪄</span>
+                    SkrivMagi
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-8">
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start"
+                    onClick={() => scrollToSection('for-larare')}
+                  >
+                    <GraduationCap className="h-4 w-4 mr-2" />
+                    För lärare
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start"
+                    onClick={() => {
+                      navigate('/sagoscenen');
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    🎭 SagoScenen
+                  </Button>
+                  <hr className="my-2" />
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">Logga in</Button>
+                  </Link>
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full">Kom igång gratis</Button>
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </nav>

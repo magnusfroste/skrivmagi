@@ -165,11 +165,11 @@ export default function MySagor() {
                     <CardTitle className="text-lg line-clamp-1">{saga.title}</CardTitle>
                     {getStatusBadge(saga)}
                   </div>
-                  <CardDescription className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <LageBadge lage={saga.lage} />
                     <span>•</span>
                     <span>{formatDate(saga.created_at)}</span>
-                  </CardDescription>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex gap-2">
