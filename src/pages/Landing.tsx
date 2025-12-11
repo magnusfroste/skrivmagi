@@ -29,7 +29,8 @@ import {
   Star,
   Heart,
   Zap,
-  Menu
+  Menu,
+  Github
 } from "lucide-react";
 
 const Landing = () => {
@@ -569,9 +570,22 @@ const Landing = () => {
             <span className="text-2xl">🪄</span>
             <span className="font-bold">SkrivMagi</span>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mb-4">
             Ett pedagogiskt verktyg för kreativt skrivande i skolan
           </p>
+          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+            <span>Skapad av Magnus Froste</span>
+            <span className="text-muted-foreground/50">•</span>
+            <a 
+              href="https://github.com/magnusfroste" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 hover:text-foreground transition-colors"
+            >
+              <Github className="h-4 w-4" />
+              Open Source
+            </a>
+          </div>
         </div>
       </footer>
     </div>
