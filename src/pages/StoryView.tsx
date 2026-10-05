@@ -185,7 +185,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
           // Also update in database
           await supabase
             .from('sagor')
-            .update({ [part.key]: data.imageUrl })
+            .update({ [part.key]: data.imageUrl } as { bild_inledning?: string; bild_huvuddel?: string; bild_avslutning?: string })
             .eq('id', saga.id);
         }
       }

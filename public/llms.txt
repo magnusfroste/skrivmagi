@@ -1,0 +1,14 @@
+# SkrivMagi
+
+> SkrivMagi är en lekfull webbapp där elever i årskurs 1–4 skapar egna sagor med tydlig inledning, huvuddel och avslutning.
+
+SkrivMagi hjälper barn att komma igång med kreativt skrivande. Eleven väljer mellan tre nivåer: pusselläge med färdiga sagokort och AI-hjälp, halvfritt läge där korten ger inspiration och fritt läge med en skrivcoach. Sagorna kan få egna AI-bilder och delas på SagoScenen, där andra kan läsa och applådera.
+
+För lärare finns klasskoder, en översikt över elevernas sagor och möjlighet att ge kommentarer. Verktyget stöttar Lgr22:s mål för berättande texter i svenska. Appen fungerar på surfplatta och mobil och kan installeras som app.
+
+## Viktiga länkar
+
+- [Startsida](https://skrivmagi.skolappar.com/): Om SkrivMagi för elever och lärare
+- [SagoScenen](https://skrivmagi.skolappar.com/sagoscenen): Publicerade sagor från elever
+- [Logga in / skapa konto](https://skrivmagi.skolappar.com/auth): Kom igång som elev, lärare eller förälder
+- [Källkod på GitHub](https://github.com/magnusfroste): Öppen källkod av Magnus Froste
