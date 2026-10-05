@@ -68,7 +68,7 @@ export default function StoryBuilder() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Refs to track current values without causing re-renders
   const titleRef = useRef(title);
