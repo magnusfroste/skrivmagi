@@ -91,24 +91,15 @@ export default function PublicDiscovery() {
     ));
 
     try {
-      // Get current upvotes and increment server-side
-      const saga = sagor.find(s => s.id === sagaId);
-      const currentUpvotes = saga?.upvotes || 0;
-      
-      const { error: updateError } = await supabase
-        .from('sagor')
-        .update({ upvotes: currentUpvotes + 1 })
-        .eq('id', sagaId);
-
-      if (updateError) throw updateError;
-
-      // Record the vote
       const visitorId = localStorage.getItem('visitor_id') || crypto.randomUUID();
       localStorage.setItem('visitor_id', visitorId);
 
-      await supabase
-        .from('saga_upvotes')
-        .insert({ saga_id: sagaId, voter_identifier: visitorId });
+      const { error: rpcError } = await supabase.rpc('upvote_saga', {
+        p_saga_id: sagaId,
+        p_voter_identifier: visitorId,
+      });
+
+      if (rpcError) throw rpcError;
 
       // Update local storage
       const newVotedSagas = new Set(votedSagas);
