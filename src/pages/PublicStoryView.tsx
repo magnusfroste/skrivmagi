@@ -67,19 +67,15 @@ export default function PublicStoryView() {
     if (!saga || hasVoted) return;
 
     try {
-      const fingerprint = localStorage.getItem('user_fingerprint') || crypto.randomUUID();
-      localStorage.setItem('user_fingerprint', fingerprint);
+      const visitorId = localStorage.getItem('visitor_id') || crypto.randomUUID();
+      localStorage.setItem('visitor_id', visitorId);
 
-      const { error: upvoteError } = await supabase
-        .from('saga_upvotes')
-        .insert({ saga_id: saga.id, voter_identifier: fingerprint });
+      const { error: upvoteError } = await supabase.rpc('upvote_saga', {
+        p_saga_id: saga.id,
+        p_voter_identifier: visitorId,
+      });
 
       if (upvoteError) throw upvoteError;
-
-      await supabase
-        .from('sagor')
-        .update({ upvotes: saga.upvotes + 1 })
-        .eq('id', saga.id);
 
       const voted = localStorage.getItem('voted_sagas');
       const votedSet = new Set(voted ? JSON.parse(voted) : []);
