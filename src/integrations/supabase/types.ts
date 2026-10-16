@@ -267,6 +267,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      upvote_saga: {
+        Args: { p_saga_id: string; p_voter_identifier: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "student" | "teacher" | "parent"
