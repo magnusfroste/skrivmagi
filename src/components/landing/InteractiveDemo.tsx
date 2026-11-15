@@ -67,6 +67,7 @@ export const InteractiveDemo = () => {
   const handleReset = () => {
     setPlacedCards({ inledning: null, huvuddel: null, avslutning: null });
     setIsComplete(false);
+    setDraggedCard(null);
   };
 
   const availableCards = demoCards.filter(
@@ -101,20 +102,22 @@ export const InteractiveDemo = () => {
               const config = categoryConfig[card.kategori as keyof typeof categoryConfig];
               const Icon = config.icon;
               return (
-                <div
+                <Button variant="outline"
                   key={card.id}
+                  aria-pressed={draggedCard?.id === card.id}
+                  onClick={() => handleDragStart(card)}
                   draggable
                   onDragStart={() => handleDragStart(card)}
-                  className={`p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing hover:shadow-md transition-all select-none ${config.color}`}
+                  className={`h-auto text-left justify-start p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing hover:shadow-md transition-all select-none ${config.color}`}
                 >
                   <div className="flex items-start gap-2">
                     <Icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-medium">{card.text}</p>
-                      <span className="text-[10px] opacity-70">{config.label}</span>
+                      <p className="text-sm font-medium">{card.text}</p>
+                      <span className="text-sm">{config.label}</span>
                     </div>
                   </div>
-                </div>
+                </Button>
               );
             })}
             {availableCards.length === 0 && !isComplete && (
@@ -132,12 +135,14 @@ export const InteractiveDemo = () => {
             {zones.map((zone) => {
               const placedCard = placedCards[zone.id];
               return (
-                <div
+                <Button variant="outline"
                   key={zone.id}
+                  aria-label={`Lägg valt kort i ${zone.label}`}
+                  onClick={() => handleDrop(zone.id)}
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(zone.id)}
                   className={`
-                    rounded-lg border-2 overflow-hidden transition-all
+                    w-full h-auto block p-0 text-left rounded-lg border-2 overflow-hidden transition-all
                     ${zone.borderColor}
                     ${placedCard ? 'border-solid' : 'border-dashed bg-muted/30'}
                     ${!placedCard && draggedCard ? 'ring-2 ring-purple-400 ring-offset-2' : ''}
@@ -146,7 +151,7 @@ export const InteractiveDemo = () => {
                   {/* Zone header */}
                   <div className={`px-3 py-1.5 flex items-center gap-2 ${zone.headerColor}`}>
                     <span className="text-base">{zone.emoji}</span>
-                    <span className="font-semibold text-xs">{zone.label}</span>
+                    <span className="font-semibold text-sm">{zone.label}</span>
                   </div>
                   
                   {/* Zone content */}
@@ -159,11 +164,11 @@ export const InteractiveDemo = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <span className="text-xs text-muted-foreground italic">{zone.hint}</span>
+                        <span className="text-sm text-muted-foreground italic">{zone.hint}</span>
                       </div>
                     )}
                   </div>
-                </div>
+                </Button>
               );
             })}
           </div>

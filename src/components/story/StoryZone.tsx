@@ -22,22 +22,22 @@ const zoneConfig = {
   inledning: {
     label: 'Inledning',
     emoji: '🌅',
-    color: 'border-green-400 bg-green-50/50',
-    headerColor: 'bg-green-100 text-green-800',
+    color: 'border-story-start-foreground/40 bg-story-start',
+    headerColor: 'bg-story-start text-story-start-foreground',
     hint: 'Här börjar din saga. Berätta vem som är med och var det händer.'
   },
   huvuddel: {
     label: 'Huvuddel',
     emoji: '⚡',
-    color: 'border-yellow-400 bg-yellow-50/50',
-    headerColor: 'bg-yellow-100 text-yellow-800',
+    color: 'border-story-middle-foreground/40 bg-story-middle',
+    headerColor: 'bg-story-middle text-story-middle-foreground',
     hint: 'Vad händer? Kanske uppstår ett problem eller äventyr!'
   },
   avslutning: {
     label: 'Avslutning',
     emoji: '🌟',
-    color: 'border-blue-400 bg-blue-50/50',
-    headerColor: 'bg-blue-100 text-blue-800',
+    color: 'border-story-end-foreground/40 bg-story-end',
+    headerColor: 'bg-story-end text-story-end-foreground',
     hint: 'Hur slutar sagan? Löses problemet?'
   }
 };
@@ -86,7 +86,7 @@ export function StoryZone({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className={`px-4 py-2 rounded-t-lg flex items-center justify-between ${config.headerColor}`}>
+      <div className={`px-4 py-2 rounded-t-lg flex flex-wrap gap-2 items-center justify-between ${config.headerColor}`}>
         <div className="flex items-center gap-2">
           <span className="text-xl">{config.emoji}</span>
           <span className="font-bold">{config.label}</span>
@@ -97,10 +97,11 @@ export function StoryZone({
             variant="ghost"
             onClick={onGenerateText}
             disabled={isGenerating}
-            className="h-7"
+            className="min-h-11"
+            aria-label={isGenerating ? "Skapar text" : "Skapa text"}
           >
             {isGenerating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <><Loader2 className="h-4 w-4 animate-spin" /> Skapar…</>
             ) : (
               <>
                 <Sparkles className="h-4 w-4 mr-1" />
@@ -117,15 +118,15 @@ export function StoryZone({
           <div className="flex flex-wrap gap-2 min-h-[40px]">
             {droppedCards.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">
-                {isDragOver ? '👇 Släpp kortet här!' : '👉 Dra kort hit från biblioteket'}
+                {isDragOver ? '👇 Släpp kortet här!' : '👉 Välj kort från biblioteket'}
               </p>
             ) : (
               droppedCards.map(card => (
-                <Badge key={card.id} variant="secondary" className="py-1 px-2 gap-1">
+                <Badge key={card.id} variant="secondary" className="py-1 px-2 gap-1 max-w-full text-sm">
                   {card.text}
-                  <button onClick={() => onCardRemove(card.id)} className="ml-1 hover:text-destructive">
+                  <Button variant="ghost" size="icon" aria-label={`Ta bort kortet ${card.text}`} onClick={() => onCardRemove(card.id)} className="ml-1 shrink-0 hover:text-destructive">
                     <X className="h-3 w-3" />
-                  </button>
+                  </Button>
                 </Badge>
               ))
             )}
@@ -136,6 +137,7 @@ export function StoryZone({
         {(mode === 'halv' || mode === 'fritt' || text) && (
           <Textarea
             key={`textarea-${type}`}
+            aria-label={config.label}
             value={text}
             onChange={(e) => onTextChange(e.target.value)}
             onFocus={onFocus}
@@ -147,7 +149,7 @@ export function StoryZone({
 
         {!text && mode === 'pussel' && droppedCards.length > 0 && (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Klicka på "Skapa text" för att generera din text! ✨
+            Klicka på "Skapa text" för att skapa din text! ✨
           </p>
         )}
       </div>

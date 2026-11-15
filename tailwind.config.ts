@@ -14,6 +14,14 @@ export default {
     },
     extend: {
       colors: {
+        "story-start": "hsl(var(--story-start))",
+        "story-start-foreground": "hsl(var(--story-start-foreground))",
+        "story-middle": "hsl(var(--story-middle))",
+        "story-middle-foreground": "hsl(var(--story-middle-foreground))",
+        "story-end": "hsl(var(--story-end))",
+        "story-end-foreground": "hsl(var(--story-end-foreground))",
+        magic: "hsl(var(--magic))",
+        "magic-foreground": "hsl(var(--magic-foreground))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

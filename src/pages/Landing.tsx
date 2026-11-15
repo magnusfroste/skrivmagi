@@ -67,22 +67,22 @@ const Landing = () => {
             <Button variant="ghost" onClick={() => navigate('/sagoscenen')}>
               🎭 SagoScenen
             </Button>
-            <Link to="/auth">
+            <Link to="/auth" className="inline-flex min-h-11 items-center justify-center">
               <Button variant="outline">Logga in</Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/auth" className="inline-flex min-h-11 items-center justify-center">
               <Button>Kom igång</Button>
             </Link>
           </div>
 
           {/* Mobile navigation */}
           <div className="flex md:hidden items-center gap-2">
-            <Link to="/auth">
+            <Link to="/auth" className="inline-flex min-h-11 items-center justify-center">
               <Button size="sm">Kom igång</Button>
             </Link>
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label="Öppna menyn">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -126,6 +126,7 @@ const Landing = () => {
         </div>
       </nav>
 
+      <main>
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto text-center">
@@ -134,7 +135,7 @@ const Landing = () => {
             <span className="text-sm font-medium">Nytt: AI-genererade bilder till din saga!</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent animate-fade-in">
+          <h1 className="text-4xl md:text-7xl font-bold mb-6 text-magic animate-fade-in">
             SkrivMagi ✨
           </h1>
           
@@ -144,7 +145,7 @@ const Landing = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
-            <Link to="/auth">
+            <Link to="/auth" className="inline-flex min-h-11 items-center justify-center">
               <Button size="lg" className="text-lg px-8 py-6 gap-2">
                 <Palette className="h-5 w-5" />
                 Börja skriva!
@@ -295,7 +296,7 @@ const Landing = () => {
                       <PenTool className="h-6 w-6 text-yellow-600" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg">Halv-fritt läge</h3>
+                      <h3 className="font-bold text-lg">Halvfritt läge</h3>
                       <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">Lagom svårt</span>
                     </div>
                   </div>
@@ -351,7 +352,7 @@ const Landing = () => {
             {[
               { icon: Palette, color: 'pink', title: 'AI-bilder', desc: 'Få unika bilder till varje del av din saga' },
               { icon: Share2, color: 'green', title: 'SagoScenen', desc: 'Publicera din saga och samla applåder!' },
-              { icon: Zap, color: 'yellow', title: 'Auto-sparning', desc: 'Din saga sparas automatiskt medan du skriver' },
+              { icon: Zap, color: 'yellow', title: 'Automatisk sparning', desc: 'Din saga sparas automatiskt medan du skriver' },
               { icon: Puzzle, color: 'purple', title: 'Tre nivåer', desc: 'Från enkelt pusselläge till fritt skrivande' },
               { icon: Users, color: 'blue', title: 'Klassrum', desc: 'Se klasskamraters sagor och inspireras' },
             ].map((feature, index) => (
@@ -512,7 +513,7 @@ const Landing = () => {
               "Automatisk sparning"
             ].map((feature, index) => (
               <AnimatedSection key={feature} delay={index * 50} direction="scale">
-                <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full">
+                <div className="flex items-center gap-2 bg-story-start text-story-start-foreground px-4 py-2 rounded-full">
                   <CheckCircle className="h-4 w-4" />
                   <span className="text-sm font-medium">{feature}</span>
                 </div>
@@ -523,18 +524,18 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500">
+      <section className="py-20 px-4 bg-magic">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
             {/* For students */}
             <AnimatedSection delay={0} direction="left">
-              <div className="text-center text-white">
+              <div className="text-center text-magic-foreground">
                 <div className="text-6xl mb-4">🎨</div>
                 <h3 className="text-2xl font-bold mb-2">För elever</h3>
-                <p className="mb-6 text-white/90">
+                <p className="mb-6 text-magic-foreground">
                   Skapa ditt konto och börja skriva sagor direkt!
                 </p>
-                <Link to="/auth">
+                <Link to="/auth" className="inline-flex min-h-11 items-center justify-center">
                   <Button size="lg" variant="secondary" className="gap-2">
                     Kom igång gratis
                     <ArrowRight className="h-4 w-4" />
@@ -545,13 +546,13 @@ const Landing = () => {
 
             {/* For teachers */}
             <AnimatedSection delay={150} direction="right">
-              <div className="text-center text-white">
+              <div className="text-center text-magic-foreground">
                 <div className="text-6xl mb-4">👩‍🏫</div>
                 <h3 className="text-2xl font-bold mb-2">För lärare</h3>
-                <p className="mb-6 text-white/90">
+                <p className="mb-6 text-magic-foreground">
                   Skapa lärarkonto för att följa dina elevers arbete
                 </p>
-                <Link to="/auth">
+                <Link to="/auth" className="inline-flex min-h-11 items-center justify-center">
                   <Button size="lg" variant="secondary" className="gap-2">
                     Registrera som lärare
                     <ArrowRight className="h-4 w-4" />
@@ -563,6 +564,7 @@ const Landing = () => {
         </div>
       </section>
 
+      </main>
       {/* Footer */}
       <footer className="py-8 px-4 bg-background border-t">
         <div className="container mx-auto text-center">
@@ -580,10 +582,10 @@ const Landing = () => {
               href="https://github.com/magnusfroste" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-1 hover:text-foreground transition-colors"
+              className="flex min-h-11 items-center gap-1 hover:text-foreground transition-colors"
             >
               <Github className="h-4 w-4" />
-              Open Source
+              Öppen källkod
             </a>
           </div>
         </div>

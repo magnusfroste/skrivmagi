@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Library, Users, Sparkles, Pencil, LogOut, Menu } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 
 export default function Index() {
   const { user, role, loading, signOut } = useAuth();
@@ -73,11 +73,12 @@ export default function Index() {
           {/* Mobile navigation */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="Öppna menyn">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-64">
+              <SheetTitle>Meny</SheetTitle><SheetDescription className="sr-only">SkrivMagi</SheetDescription>
               <div className="flex flex-col gap-2 mt-6">
                 {navItems.map((item) => (
                   <Button 
@@ -111,7 +112,7 @@ export default function Index() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50" onClick={() => handleModeSelect('pussel')}>
+          <Link to="/skapa?lage=pussel" className="block rounded-lg"><Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="text-2xl">🧩</span>
@@ -121,21 +122,21 @@ export default function Index() {
                 Dra och släpp kort för att skapa din saga. Perfekt för nybörjare!
               </CardDescription>
             </CardHeader>
-          </Card>
+          </Card></Link>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50" onClick={() => handleModeSelect('halv')}>
+          <Link to="/skapa?lage=halv" className="block rounded-lg"><Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="text-2xl">✍️</span>
-                Halv-fritt läge
+                Halvfritt läge
               </CardTitle>
               <CardDescription>
                 Använd kort som inspiration och skriv din egen text.
               </CardDescription>
             </CardHeader>
-          </Card>
+          </Card></Link>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50" onClick={() => handleModeSelect('fritt')}>
+          <Link to="/skapa?lage=fritt" className="block rounded-lg"><Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="text-2xl">🚀</span>
@@ -145,13 +146,13 @@ export default function Index() {
                 Skriv helt fritt med hjälp av AI-coachen.
               </CardDescription>
             </CardHeader>
-          </Card>
+          </Card></Link>
         </div>
 
         <div className="mt-12 text-center">
           <h3 className="text-xl font-semibold mb-4">Eller utforska...</h3>
           <div className="flex flex-wrap justify-center gap-4">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/mina-sagor')}>
+            <Link to="/mina-sagor" className="block rounded-lg max-w-full"><Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Library className="h-5 w-5" />
@@ -159,9 +160,9 @@ export default function Index() {
                 </CardTitle>
                 <CardDescription>Se och redigera dina tidigare sagor</CardDescription>
               </CardHeader>
-            </Card>
+            </Card></Link>
             
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/skapa?lage=pussel')}>
+            <Link to="/skapa?lage=pussel" className="block rounded-lg max-w-full"><Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Pencil className="h-5 w-5" />
@@ -169,7 +170,7 @@ export default function Index() {
                 </CardTitle>
                 <CardDescription>Prova själv att skapa en saga</CardDescription>
               </CardHeader>
-            </Card>
+            </Card></Link>
           </div>
         </div>
       </main>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -144,12 +144,12 @@ export default function PublicDiscovery() {
           </div>
           <h1 className="text-4xl font-bold mb-2">Välkommen till SagoScenen! 🎭</h1>
           <p className="text-muted-foreground text-lg">
-            Här premiärer de bästa sagorna från alla skrivmagiker
+            Här har skrivmagikernas sagor premiär
           </p>
         </div>
 
         {/* Sort buttons */}
-        <div className="flex justify-center gap-2 mb-8">
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
           <Button
             variant={sortBy === 'popular' ? 'default' : 'outline'}
             onClick={() => setSortBy('popular')}
@@ -187,9 +187,8 @@ export default function PublicDiscovery() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sagor.map((saga) => (
                 <Card key={saga.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div 
-                    className="aspect-video bg-muted cursor-pointer"
-                    onClick={() => navigate(`/sagoscenen/visa/${saga.share_slug}`)}
+                  <Link to={`/sagoscenen/visa/${saga.share_slug}`} aria-label={`Läs ${saga.title}`}
+                    className="block aspect-video bg-muted"
                   >
                     {saga.bild_inledning ? (
                       <img
@@ -202,14 +201,9 @@ export default function PublicDiscovery() {
                         📖
                       </div>
                     )}
-                  </div>
+                  </Link>
                   <CardHeader className="pb-2">
-                    <CardTitle 
-                      className="text-lg cursor-pointer hover:text-primary transition-colors line-clamp-1"
-                      onClick={() => navigate(`/sagoscenen/visa/${saga.share_slug}`)}
-                    >
-                      {saga.title}
-                    </CardTitle>
+                    <CardTitle className="text-lg"><Link className="flex min-h-11 items-center hover:text-primary" to={`/sagoscenen/visa/${saga.share_slug}`}>{saga.title}</Link></CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="flex items-center justify-between">

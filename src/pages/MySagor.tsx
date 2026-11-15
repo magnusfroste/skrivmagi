@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -53,11 +53,12 @@ export default function MySagor() {
   }, [user, authLoading, navigate]);
 
   const loadSagor = async () => {
+    if (!user) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('sagor')
       .select('id, title, status, lage, created_at, inledning_text, huvuddel_text, avslutning_text, bild_inledning')
-      .eq('student_id', user!.id)
+      .eq('student_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -88,7 +89,7 @@ export default function MySagor() {
   const getStatusBadge = (saga: Saga) => {
     const hasAllParts = saga.inledning_text && saga.huvuddel_text && saga.avslutning_text;
     if (hasAllParts) {
-      return <Badge variant="default" className="bg-green-500">Klar</Badge>;
+      return <Badge variant="default" className="bg-story-start text-story-start-foreground">Klar</Badge>;
     }
     return <Badge variant="secondary">Pågående</Badge>;
   };
@@ -144,9 +145,8 @@ export default function MySagor() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sagor.map((saga) => (
               <Card key={saga.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div 
-                  className="aspect-video bg-muted cursor-pointer"
-                  onClick={() => navigate(`/saga/${saga.id}`)}
+                <Link to={`/saga/${saga.id}`} aria-label={`Läs ${saga.title}`}
+                  className="block aspect-video bg-muted"
                 >
                   {saga.bild_inledning ? (
                     <img
@@ -159,13 +159,13 @@ export default function MySagor() {
                       📖
                     </div>
                   )}
-                </div>
+                </Link>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg line-clamp-1">{saga.title}</CardTitle>
                     {getStatusBadge(saga)}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     <LageBadge lage={saga.lage} />
                     <span>•</span>
                     <span>{formatDate(saga.created_at)}</span>
@@ -194,6 +194,7 @@ export default function MySagor() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label={`Ta bort ${saga.title}`}
                       className="text-destructive hover:text-destructive"
                       onClick={() => setDeleteId(saga.id)}
                     >

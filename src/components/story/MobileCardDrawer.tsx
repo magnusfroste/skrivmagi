@@ -29,11 +29,11 @@ interface MobileCardDrawerProps {
 }
 
 const categoryConfig = {
-  karaktar: { label: 'Karaktär', icon: User, color: 'bg-purple-100 text-purple-700 border-purple-200' },
-  plats: { label: 'Plats', icon: MapPin, color: 'bg-green-100 text-green-700 border-green-200' },
-  tid: { label: 'Tid', icon: Clock, color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  kansla: { label: 'Känsla', icon: Heart, color: 'bg-pink-100 text-pink-700 border-pink-200' },
-  problem: { label: 'Problem', icon: AlertTriangle, color: 'bg-orange-100 text-orange-700 border-orange-200' }
+  karaktar: { label: 'Karaktär', icon: User, color: 'bg-accent text-accent-foreground border-border' },
+  plats: { label: 'Plats', icon: MapPin, color: 'bg-story-start text-story-start-foreground border-story-start-foreground/40' },
+  tid: { label: 'Tid', icon: Clock, color: 'bg-story-end text-story-end-foreground border-story-end-foreground/40' },
+  kansla: { label: 'Känsla', icon: Heart, color: 'bg-accent text-accent-foreground border-border' },
+  problem: { label: 'Problem', icon: AlertTriangle, color: 'bg-story-middle text-story-middle-foreground border-story-middle-foreground/40' }
 };
 
 export function MobileCardDrawer({ cards, onCardSelect }: MobileCardDrawerProps) {
@@ -73,13 +73,13 @@ export function MobileCardDrawer({ cards, onCardSelect }: MobileCardDrawerProps)
             Välj kort
           </Button>
         </DrawerTrigger>
-        <DrawerContent className="max-h-[85vh]">
+        <DrawerContent className="max-h-[85dvh]">
           <DrawerHeader className="pb-2">
             <DrawerTitle className="flex items-center gap-2">
               📚 Kortbibliotek
             </DrawerTitle>
             <DrawerDescription>
-              Tryck på ett kort för att välja zon
+              Välj ett kort till din saga
             </DrawerDescription>
           </DrawerHeader>
 
@@ -87,6 +87,7 @@ export function MobileCardDrawer({ cards, onCardSelect }: MobileCardDrawerProps)
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                aria-label="Sök kort"
                 placeholder="Sök kort..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -95,32 +96,32 @@ export function MobileCardDrawer({ cards, onCardSelect }: MobileCardDrawerProps)
             </div>
 
             <div className="flex flex-wrap gap-1">
-              <Badge
+              <Button size="sm"
                 variant={selectedCategory === null ? 'default' : 'outline'}
-                className="cursor-pointer"
+                aria-pressed={selectedCategory === null} className="cursor-pointer"
                 onClick={() => setSelectedCategory(null)}
               >
                 Alla
-              </Badge>
+              </Button>
               {categories.map(cat => {
                 const config = categoryConfig[cat];
                 const Icon = config.icon;
                 return (
-                  <Badge
+                  <Button size="sm"
                     key={cat}
                     variant="outline"
-                    className={`cursor-pointer ${selectedCategory === cat ? config.color : ''}`}
+                    aria-pressed={selectedCategory === cat} className={`cursor-pointer ${selectedCategory === cat ? config.color : ''}`}
                     onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
                   >
                     <Icon className="h-3 w-3 mr-1" />
                     {config.label}
-                  </Badge>
+                  </Button>
                 );
               })}
             </div>
           </div>
 
-          <ScrollArea className="flex-1 px-4 max-h-[50vh]">
+          <ScrollArea className="min-h-0 flex-1 px-4 max-h-[50dvh]">
             <div className="grid grid-cols-2 gap-2 pb-4">
               {filteredCards.length === 0 ? (
                 <p className="col-span-2 text-center text-muted-foreground py-8">
@@ -132,19 +133,19 @@ export function MobileCardDrawer({ cards, onCardSelect }: MobileCardDrawerProps)
                   const Icon = config.icon;
 
                   return (
-                    <button
+                    <Button variant="outline"
                       key={card.id}
                       onClick={() => handleCardClick(card)}
-                      className={`p-3 rounded-lg border-2 text-left transition-all active:scale-95 ${config.color}`}
+                      className={`p-3 rounded-lg border-2 h-auto justify-start whitespace-normal text-left transition-all active:scale-95 ${config.color}`}
                     >
                       <div className="flex items-start gap-2">
                         <Icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
                         <div>
-                          <p className="text-sm font-medium line-clamp-2">{card.text}</p>
-                          <span className="text-xs opacity-70">{config.label}</span>
+                          <p className="text-sm font-medium break-words">{card.text}</p>
+                          <span className="text-sm">{config.label}</span>
                         </div>
                       </div>
-                    </button>
+                    </Button>
                   );
                 })
               )}
@@ -163,7 +164,7 @@ export function MobileCardDrawer({ cards, onCardSelect }: MobileCardDrawerProps)
       <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Välj zon för kortet</DialogTitle>
+            <DialogTitle>Välj del av sagan</DialogTitle>
             <DialogDescription>
               {selectedCard?.text}
             </DialogDescription>

@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Volume2, Mic, Download, Send, Loader2, Play, Pause, Image, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { withAITimeout } from '@/lib/ai-request';
+import { GenerationFeedback } from '@/components/story/GenerationFeedback';
 
 interface Saga {
   id: string;
@@ -32,6 +34,7 @@ export default function StoryView() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [generationError, setGenerationError] = useState<'images' | 'audio' | null>(null);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 3, part: '' });
@@ -104,11 +107,12 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
     });
 
     setIsGeneratingAudio(true);
+    setGenerationError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text: fullText, voiceId: selectedVoice }
-      });
+      const { data, error } = await withAITimeout(signal => supabase.functions.invoke('text-to-speech', {
+        signal, body: { text: fullText, voiceId: selectedVoice }
+      }));
 
       if (error) throw error;
 
@@ -139,7 +143,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
       toast.success('Uppläsning klar! 🎧');
     } catch (error) {
       console.error('Error generating audio:', error);
-      toast.error('Kunde inte skapa uppläsning');
+      setGenerationError('audio');
     } finally {
       setIsGeneratingAudio(false);
     }
@@ -148,7 +152,9 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
   const generateImages = async () => {
     if (!saga) return;
 
+    if (isGeneratingImages) return;
     setIsGeneratingImages(true);
+    setGenerationError(null);
     toast.info('🎨 Skapar bilder... Detta tar cirka 1-2 minuter.', {
       duration: 5000
     });
@@ -165,14 +171,14 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
         if (part.text) {
           setImageProgress({ current: i + 1, total: parts.length, part: part.name });
           
-          const { data, error } = await supabase.functions.invoke('generate-image', {
-            body: { 
+          const { data, error } = await withAITimeout(signal => supabase.functions.invoke('generate-image', {
+            signal, body: {
               text: part.text, 
               sagaId: saga.id, 
               partKey: part.key,
               title: saga.title
             }
-          });
+          }), 150_000);
 
           if (error) throw error;
 
@@ -192,7 +198,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
       toast.success('Bilder skapade! 🎨');
     } catch (error) {
       console.error('Error generating images:', error);
-      toast.error('Kunde inte skapa bilder');
+      setGenerationError('images');
     } finally {
       setIsGeneratingImages(false);
       setImageProgress({ current: 0, total: 3, part: '' });
@@ -266,12 +272,12 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
-        <div className="container flex h-14 items-center justify-between">
+        <div className="container flex flex-wrap min-h-14 py-2 gap-2 items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => navigate('/mina-sagor')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Tillbaka
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Image generation button - simplified */}
             <Button
               variant={saga.bild_inledning && saga.bild_huvuddel && saga.bild_avslutning ? "default" : "outline"}
@@ -293,7 +299,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
             {ttsEnabled && (
               <>
                 <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isGeneratingAudio}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger aria-label="Välj röst" className="w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -343,6 +349,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
       </header>
 
       <main className="container py-8">
+        <GenerationFeedback busy={isGeneratingImages || isGeneratingAudio} error={generationError !== null} label={isGeneratingImages ? `Vi målar bilder till din saga… ${imageProgress.current} av ${imageProgress.total}` : "Vi skapar uppläsningen…"} onRetry={() => { if (generationError === "images") generateImages(); else generateNarration(); }} />
         <Card className="max-w-2xl mx-auto overflow-hidden">
           {/* Image area */}
           <div className="aspect-[4/3] bg-muted flex items-center justify-center relative">
@@ -371,13 +378,13 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
             ) : (
               <div className="text-center text-muted-foreground">
                 <Image className="h-16 w-16 mx-auto mb-2 opacity-50" />
-                <p>Klicka "Skapa bilder" för att generera illustrationer</p>
+                <p>Din saga väntar på sina bilder</p>
               </div>
             )}
 
             {currentPage === 0 && (
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent flex items-end justify-center pb-8">
-                <h1 className="text-4xl font-bold text-center">{saga.title}</h1>
+                <h1 className="text-2xl sm:text-4xl font-bold text-center bg-background/95 text-foreground px-4 py-2 max-w-full">{saga.title}</h1>
               </div>
             )}
           </div>
@@ -386,14 +393,14 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
             {currentPageData.type !== 'cover' && (
               <>
                 <h2 className="text-xl font-semibold mb-4">{currentPageData.title}</h2>
-                <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                <p className="text-lg leading-relaxed whitespace-pre-wrap break-words">
                   {currentPageData.content || 'Ingen text ännu...'}
                 </p>
               </>
             )}
 
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-4 border-t">
+            <div className="grid grid-cols-2 gap-2 items-center mt-8 pt-4 border-t">
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
@@ -402,15 +409,13 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
                 ← Föregående
               </Button>
 
-              <div className="flex items-center gap-2">
+              <div className="col-span-2 row-start-2 flex items-center justify-center gap-2">
                 {pages.map((_, i) => (
-                  <button
+                  <Button variant="ghost" size="icon" aria-label={i === 0 ? "Omslag" : `Sida ${i}: ${pages[i].title}`} aria-current={i === currentPage ? "page" : undefined}
                     key={i}
                     onClick={() => setCurrentPage(i)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      i === currentPage ? 'bg-primary' : 'bg-muted-foreground/30'
-                    }`}
-                  />
+                    className="rounded-full"
+                  ><span aria-hidden="true" className={`h-2 w-2 rounded-full ${i === currentPage ? "bg-primary" : "bg-muted-foreground"}`} /></Button>
                 ))}
               </div>
 
@@ -426,7 +431,7 @@ Och så levde de lyckliga i alla sina dagar. Slut!`;
             {/* Audio player - only show if TTS enabled and audio exists */}
             {ttsEnabled && audioUrl && (
               <div className="mt-4 p-4 bg-muted rounded-lg flex items-center gap-4">
-                <Button size="icon" variant="outline" onClick={playAudio}>
+                <Button size="icon" variant="outline" aria-label={isPlaying ? "Pausa uppläsningen" : "Lyssna på sagan"} onClick={playAudio}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
                 <span className="text-sm text-muted-foreground">

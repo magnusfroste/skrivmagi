@@ -48,7 +48,7 @@ export default function PublicStoryView() {
 
     if (error) {
       toast.error('Kunde inte hitta sagan');
-      navigate('/upptack');
+      navigate('/sagoscenen');
     } else {
       setSaga(data);
     }
@@ -84,10 +84,10 @@ export default function PublicStoryView() {
 
       setHasVoted(true);
       setSaga({ ...saga, upvotes: saga.upvotes + 1 });
-      toast.success('Gilla registrerad! 💖');
+      toast.success('Applåder! 👏');
     } catch (error) {
       console.error('Error upvoting saga:', error);
-      toast.error('Kunde inte gilla sagan');
+      toast.error('Din applåd kom inte fram. Försök igen!');
     }
   };
 
@@ -124,18 +124,19 @@ export default function PublicStoryView() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
-        <div className="container flex h-14 items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/upptack')}>
+        <div className="container flex flex-wrap min-h-14 py-2 gap-2 items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/sagoscenen')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Tillbaka
           </Button>
           <Button
             variant={hasVoted ? 'secondary' : 'outline'}
             size="sm"
+            aria-label={hasVoted ? "Du har applåderat sagan" : "Applådera sagan"}
             onClick={handleUpvote}
             disabled={hasVoted}
           >
-            <Heart className={`h-4 w-4 mr-2 ${hasVoted ? 'fill-red-500 text-red-500' : ''}`} />
+            <Heart className={`h-4 w-4 mr-2 ${hasVoted ? 'fill-current text-primary' : ''}`} />
             {saga.upvotes || 0}
           </Button>
         </div>
@@ -158,7 +159,7 @@ export default function PublicStoryView() {
 
             {currentPage === 0 && (
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent flex items-end justify-center pb-8">
-                <h1 className="text-4xl font-bold text-center">{saga.title}</h1>
+                <h1 className="text-2xl sm:text-4xl font-bold text-center bg-background/95 text-foreground px-4 py-2 max-w-full">{saga.title}</h1>
               </div>
             )}
           </div>
@@ -167,14 +168,14 @@ export default function PublicStoryView() {
             {currentPageData.type !== 'cover' && (
               <>
                 <h2 className="text-xl font-semibold mb-4">{currentPageData.title}</h2>
-                <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                <p className="text-lg leading-relaxed whitespace-pre-wrap break-words">
                   {currentPageData.content || 'Ingen text...'}
                 </p>
               </>
             )}
 
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-4 border-t">
+            <div className="grid grid-cols-2 gap-2 items-center mt-8 pt-4 border-t">
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
@@ -183,15 +184,13 @@ export default function PublicStoryView() {
                 ← Föregående
               </Button>
 
-              <div className="flex items-center gap-2">
+              <div className="col-span-2 row-start-2 flex items-center justify-center gap-2">
                 {pages.map((_, i) => (
-                  <button
+                  <Button variant="ghost" size="icon" aria-label={i === 0 ? "Omslag" : `Sida ${i}: ${pages[i].title}`} aria-current={i === currentPage ? "page" : undefined}
                     key={i}
                     onClick={() => setCurrentPage(i)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      i === currentPage ? 'bg-primary' : 'bg-muted-foreground/30'
-                    }`}
-                  />
+                    className="rounded-full"
+                  ><span aria-hidden="true" className={`h-2 w-2 rounded-full ${i === currentPage ? "bg-primary" : "bg-muted-foreground"}`} /></Button>
                 ))}
               </div>
 
@@ -207,7 +206,7 @@ export default function PublicStoryView() {
             {/* Audio player */}
             {saga.audio_elevenlabs_url && (
               <div className="mt-4 p-4 bg-muted rounded-lg flex items-center gap-4">
-                <Button size="icon" variant="outline" onClick={playAudio}>
+                <Button size="icon" variant="outline" aria-label={isPlaying ? "Pausa uppläsningen" : "Lyssna på sagan"} onClick={playAudio}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
                 <span className="text-sm text-muted-foreground">

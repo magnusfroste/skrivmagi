@@ -30,7 +30,7 @@ const tips = {
 };
 
 export function AICoach({ currentZone }: AICoachProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [currentTip, setCurrentTip] = useState(0);
 
   if (!isOpen) {
@@ -39,7 +39,7 @@ export function AICoach({ currentZone }: AICoachProps) {
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 shadow-lg"
+        className="fixed bottom-20 lg:bottom-4 right-4 z-30 shadow-lg"
       >
         <Sparkles className="h-4 w-4 mr-2" />
         Visa AI-coach
@@ -58,7 +58,7 @@ export function AICoach({ currentZone }: AICoachProps) {
   };
 
   return (
-    <Card className="fixed bottom-4 right-4 w-72 shadow-xl border-2 border-primary/20">
+    <Card className="fixed bottom-20 lg:bottom-4 right-4 z-30 w-72 max-w-[calc(100%-2rem)] shadow-xl border-2 border-primary/20">
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -70,7 +70,7 @@ export function AICoach({ currentZone }: AICoachProps) {
               <p className="text-xs text-muted-foreground">Din skrivhjälpare</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsOpen(false)}>
+          <Button variant="ghost" size="icon" aria-label="Stäng skrivhjälpen" className="h-11 w-11" onClick={() => setIsOpen(false)}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -78,7 +78,7 @@ export function AICoach({ currentZone }: AICoachProps) {
         <div className="bg-muted/50 rounded-lg p-3 mb-3">
           <div className="flex items-start gap-2">
             <Lightbulb className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-            <p className="text-sm">{currentTips[currentTip]}</p>
+            <p className="text-sm">{currentTips[currentTip % currentTips.length]}</p>
           </div>
         </div>
 
