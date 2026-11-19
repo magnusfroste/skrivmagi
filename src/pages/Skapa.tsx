@@ -59,16 +59,6 @@ export default function Skapa() {
 
   useEffect(() => () => stopp(), []);
 
-  const korten = useMemo(() => {
-    const map: Record<string, string[]> = {};
-    (Object.keys(valda) as Del[]).forEach(d => {
-      valda[d].forEach(id => {
-        const k = hittaKort(id);
-        if (k) map[k.kategori] = [...(map[k.kategori] || []), k.text];
-      });
-    });
-    return map;
-  }, [valda]);
 
   const zonKortval = (d: Del): Kortval => {
     const k: Kortval = {};
