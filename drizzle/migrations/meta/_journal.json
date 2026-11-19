@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792193550863,
+      "tag": "0000_upvote_saga_function",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794776198228,
+      "tag": "0001_lock_saga_upvotes",
+      "breakpoints": true
+    }
+  ]
+}
