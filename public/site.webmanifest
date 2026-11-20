@@ -1,1 +1,23 @@
-{"name": "Skrivmagi", "short_name": "Skrivmagi", "description": "Skrivmagi låter eleven bygga en egen saga i tre delar: inledning, huvuddel och avslutning. Man väljer korttycken – karaktär, plats, tid, känsla och problem – och Skrivaren hjälper till att formulera meningarna, medan eleven alltid bestämmer över orden. Uppläsning, lokala illustrationer och allt sparas bara på enheten. Gratis, utan konto och utan nät.", "start_url": "/", "display": "standalone", "background_color": "#7c3aed", "theme_color": "#7c3aed", "icons": [{"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}, {"src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml"}]}
+{
+  "name": "Skrivmagi",
+  "short_name": "Skrivmagi",
+  "description": "Skrivmagi låter eleven bygga en egen saga i tre delar: inledning, huvuddel och avslutning. Man väljer korttycken – karaktär, plats, tid, känsla och problem – och Skrivaren hjälper till att formulera meningarna, medan eleven alltid bestämmer över orden. Uppläsning, lokala illustrationer och allt sparas bara på enheten. Gratis, utan konto och utan nät.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#7c3aed",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "scope": "/",
+  "lang": "sv"
+}
