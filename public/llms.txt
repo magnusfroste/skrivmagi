@@ -8,7 +8,5 @@ För lärare finns klasskoder, en översikt över elevernas sagor och möjlighet
 
 ## Viktiga länkar
 
-- [Startsida](https://skrivmagi.skolappar.com/): Om SkrivMagi för elever och lärare
-- [SagoScenen](https://skrivmagi.skolappar.com/sagoscenen): Publicerade sagor från elever
-- [Logga in / skapa konto](https://skrivmagi.skolappar.com/auth): Kom igång som elev, lärare eller förälder
+- [Startsida](https://skrivverkstan.skolappar.com/): Om SkrivMagi för elever och lärare
 - [Källkod på GitHub](https://github.com/magnusfroste): Öppen källkod av Magnus Froste
