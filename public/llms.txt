@@ -1,14 +1,15 @@
-# SkrivMagi
+# Skrivmagi
 
-> SkrivMagi är en lekfull webbapp där elever i årskurs 1–4 skapar egna sagor med tydlig inledning, huvuddel och avslutning.
+> Skrivmagi är en gratis webbapp där barn skriver en egen saga i tre delar: inledning, huvuddel och avslutning.
 
-SkrivMagi hjälper barn att komma igång med kreativt skrivande. Eleven väljer mellan tre nivåer: pusselläge med färdiga sagokort och AI-hjälp, halvfritt läge där korten ger inspiration och fritt läge med en skrivcoach. Sagorna kan få egna AI-bilder och delas på SagoScenen, där andra kan läsa och applådera.
+Eleven väljer kort med karaktär, plats, tid, känsla och problem, och Skrivaren hjälper till att formulera meningarna. Eleven bestämmer alltid över orden och kan ändra allt. Det finns tre sätt att skriva: Pussel, där korten blir en färdig saga; Halv, där Skrivaren skriver början och eleven resten; och Fritt, där eleven skriver själv och får tips om vad som redan är bra och vad som kan läggas till. Kortleken har tre svårighetsnivåer.
 
-För lärare finns klasskoder, en översikt över elevernas sagor och möjlighet att ge kommentarer. Verktyget stöttar Lgr22:s mål för berättande texter i svenska. Appen fungerar på surfplatta och mobil och kan installeras som app.
+Den färdiga sagan visas med en enkel bild till varje del och kan läsas upp med webbläsarens svenska röst. Sagorna sparas bara på enheten. Appen kräver inget konto, använder ingen AI-tjänst och gör inga anrop till externa servrar. Den fungerar på dator, surfplatta och mobil.
 
-## Viktiga länkar
+Skrivmagi ingår i [skolappar.com](https://www.skolappar.com), lärappar byggda av föräldrar, och är öppen källkod under MIT-licensen.
 
-- [Startsida](https://skrivmagi.skolappar.com/): Om SkrivMagi för elever och lärare
-- [SagoScenen](https://skrivmagi.skolappar.com/sagoscenen): Publicerade sagor från elever
-- [Logga in / skapa konto](https://skrivmagi.skolappar.com/auth): Kom igång som elev, lärare eller förälder
-- [Källkod på GitHub](https://github.com/magnusfroste): Öppen källkod av Magnus Froste
+## Länkar
+
+- [Skriv en saga i Skrivmagi](https://skrivverkstan.skolappar.com/)
+- [Källkod på GitHub](https://github.com/magnusfroste/skrivmagi)
+- [Fler lärappar på skolappar.com](https://www.skolappar.com)
