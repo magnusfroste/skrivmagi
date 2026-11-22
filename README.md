@@ -8,7 +8,7 @@ hjälper till att formulera texten. Eleven bestämmer alltid och kan ändra allt
 
 ![Skrivmagi](public/kort.png)
 
-Började som ett Lovable-projekt och körs nu fristående, utan AI-tjänst och utan databas.
+Körs fristående, utan AI-tjänst och utan databas.
 
 ## Vad du kan göra
 
