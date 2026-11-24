@@ -10,6 +10,7 @@ import { KATEGORIER, kortFor, hittaKort, type Kategori } from '@/data/kort';
 import { skriv, tips, type Del, type Kortval } from '@/lib/skrivaren';
 import { hamtaSaga, nySaga, sparaSaga, type Saga } from '@/lib/lager';
 import { lasUpp, stopp } from '@/lib/ljud';
+import { report } from '@/lib/skolappar';
 
 const DELAR: { key: Del; namn: string; hjalp: string }[] = [
   { key: 'inledning', namn: 'Inledning', hjalp: 'Vem är med, var är vi och vad händer först?' },
@@ -59,6 +60,18 @@ export default function Skapa() {
 
   useEffect(() => () => stopp(), []);
 
+  // A story begins; puzzle and half mode have a difficulty step, sent as the level.
+  useEffect(() => {
+    report('round_start');
+    if (saga.lage !== 'fritt') report('level', niva);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const valjNiva = (n: number) => {
+    if (n !== niva) report('level', n);
+    setNiva(n);
+  };
+
 
   const zonKortval = (d: Del): Kortval => {
     const k: Kortval = {};
@@ -92,6 +105,8 @@ export default function Skapa() {
       return;
     }
     setSkriver(true);
+    // In puzzle mode the writer writes the text; in the other modes the child asks it for help.
+    if (lage !== 'pussel') report('hint');
     const valt = valda[zon].map(id => hittaKort(id)).filter(Boolean);
     const motiv = valt.map(k => k!.motiv);
     const tid = k.tid || '';
@@ -126,6 +141,8 @@ export default function Skapa() {
 
   const oppnaSagan = () => {
     sparaSaga(saga);
+    const klara = DELAR.filter(d => text(d.key).trim().length > 0).length;
+    report('round_done', Math.round((klara / DELAR.length) * 100));
     navigate(`/saga/${saga.id}`);
   };
 
@@ -163,7 +180,7 @@ export default function Skapa() {
                 key={n}
                 size="sm"
                 variant={niva === n ? 'default' : 'outline'}
-                onClick={() => setNiva(n)}
+                onClick={() => valjNiva(n)}
               >
                 {n === 1 ? 'Lätt' : n === 2 ? 'Mellan' : 'Svår'}
               </Button>
