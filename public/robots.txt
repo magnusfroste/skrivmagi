@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://skrivverkstan.skolappar.com/sitemap.xml
+Sitemap: https://skrivverkstan.skolappar.org/sitemap.xml

@@ -4,7 +4,7 @@ Skrivmagi låter elever i åk 1–6 skriva en egen saga i tre delar: inledning, 
 avslutning. Eleven väljer kort med karaktär, plats, tid, känsla och problem, och Skrivaren
 hjälper till att formulera texten. Eleven bestämmer alltid och kan ändra allt.
 
-**Spela:** https://skrivverkstan.skolappar.com · En del av [Skolappar](https://www.skolappar.com) – pedagogiska appar av föräldrar · öppen källkod (MIT)
+**Spela:** https://skrivverkstan.skolappar.org · En del av [Skolappar](https://www.skolappar.org) – pedagogiska appar av föräldrar · öppen källkod (MIT)
 
 ![Skrivmagi](public/kort.png)
 

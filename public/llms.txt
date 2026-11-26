@@ -6,10 +6,10 @@ Eleven väljer kort med karaktär, plats, tid, känsla och problem, och Skrivare
 
 Den färdiga sagan visas med en enkel bild till varje del och kan läsas upp med webbläsarens svenska röst. Sagorna sparas bara på enheten. Appen kräver inget konto, använder ingen AI-tjänst och gör inga anrop till externa servrar. Den fungerar på dator, surfplatta och mobil.
 
-Skrivmagi ingår i [skolappar.com](https://www.skolappar.com), lärappar byggda av föräldrar, och är öppen källkod under MIT-licensen.
+Skrivmagi ingår i [skolappar.org](https://www.skolappar.org), lärappar byggda av föräldrar, och är öppen källkod under MIT-licensen.
 
 ## Länkar
 
-- [Skriv en saga i Skrivmagi](https://skrivverkstan.skolappar.com/)
+- [Skriv en saga i Skrivmagi](https://skrivverkstan.skolappar.org/)
 - [Källkod på GitHub](https://github.com/magnusfroste/skrivmagi)
-- [Fler lärappar på skolappar.com](https://www.skolappar.com)
+- [Fler lärappar på skolappar.org](https://www.skolappar.org)
